@@ -4,8 +4,8 @@ import prisma from "@/lib/prisma";
 import { getUserId } from "@/lib/getUserId";
 
 export async function POST(request: NextRequest) {
-    const userId = await getUserId(); 
-    const { name, notes, deadline, type, reminders} = await request.json();
+    const userId = await getUserId();
+    const { name, notes, deadline, type, reminders } = await request.json();
 
     if (!name || !deadline || !type) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -52,16 +52,16 @@ export async function POST(request: NextRequest) {
 export async function GET(req: NextRequest) {
     try {
 
-        const userId = await getUserId(); 
+        const userId = await getUserId();
 
         const tasks = await prisma.task.findMany({
             where: {
                 user: {
                     id: userId
                 }
-            } , 
-            include : {
-                reminders : true
+            },
+            include: {
+                reminders: true
             }
         });
 
@@ -78,4 +78,40 @@ export async function GET(req: NextRequest) {
         }, { status: 500 });
     }
 
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const userId = await getUserId();
+    const { deadline, taskId } = await req.json();
+
+    if (!deadline || !taskId) {
+      return NextResponse.json({
+        success: false,
+        error: "Incomplete fields sent to the backend"
+      });
+    }
+
+    await prisma.task.update({
+      where: {
+        id: taskId,
+        userId: userId
+      },
+      data: {
+        deadline: new Date(deadline)
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "Task deadline updated"
+    });
+
+  } catch (error) {
+    console.log("Update task issue", error);
+    return NextResponse.json({
+      success: false,
+      message: "Something went wrong while snoozing"
+    });
+  }
 }

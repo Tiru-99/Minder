@@ -2,6 +2,8 @@ import { sendEmail } from "@/lib/email";
 import { changeTaskStatus } from "@/utils/changeTaskStatus";
 import { GetStepTools } from "inngest";
 import { inngest } from "./client";
+import { triggerCron } from "./events";
+import { after } from "node:test";
 
 //inngest step type 
 type StepTools = GetStepTools<typeof inngest>;
@@ -14,7 +16,8 @@ export const sendReminderStep = async (
   userEmail: string,
   taskName: string,
   username: string,
-  taskDueDate: Date
+  taskDueDate: Date , 
+  after_due_reminder : string 
 ) => {
   return step.run(`send-reminder-${index}`, async () => {
     const waitTime = getWaitTime(reminder);
@@ -40,6 +43,7 @@ export const sendReminderStep = async (
 
     if(reminder === "0h"){
       await changeTaskStatus(taskId);
+      await triggerCron({taskId , after_due_reminder , username , userEmail , taskName}); 
     }
 
     // Send the actual reminder

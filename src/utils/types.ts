@@ -3,7 +3,10 @@ export enum ScheduleReminder {
     CANCEL_EVENT = "delayed-job/reminder.delete",
     NOTIFICATION_EVENT = "delayed-job/reminder",
     OVERDUE_ID = "overdue-cron/trigger", 
-    CRON_EVENT="overdue-task/cron"
+    CRON_TRIGGER_EVENT="overdue-task/cron",
+    CRON_ID = "cron-trigger/job",
+    CRON_EVENT="cron-event/trigger", 
+    CANCEL_CRON_EVENT="cron-event/cancel"
 }
 
 export interface SchedulePayloadType {
@@ -13,4 +16,13 @@ export interface SchedulePayloadType {
     userEmail : string ; 
     username : string ; 
     taskDueDate : Date ; 
+    after_due_reminder : string; 
+}
+
+export interface ScheduleCronTrigger {
+    taskId : string ; 
+    after_due_reminder : string ; 
+    username : string ; 
+    userEmail : string ; 
+    taskName : string
 }

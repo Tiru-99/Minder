@@ -1,14 +1,6 @@
 
-import nodemailer from 'nodemailer';
-
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-});
+//normal email and cron email 
+import { transporter } from "@/utils/nodemailer";
 
 async function sendEmail({
   taskId,
@@ -622,4 +614,38 @@ function formatDate(date: Date): string {
   }).format(date);
 }
 
-export { sendEmail };
+async function sendCronEmail(
+  taskId: string,
+  after_due_reminder: string,
+  username: string,
+  userEmail: string,
+  taskName: string
+) {
+  try {
+    const info = await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: userEmail,
+      subject: `⏰ Task Overdue: ${taskName}`,
+      html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h2 style="color: #e74c3c;">⚠️ Task Overdue</h2>
+              <p>Hey ${username},</p>
+              <p>Your task <strong>${taskName}</strong> is past its deadline.</p>
+              <p style="background: #fff3cd; padding: 15px; border-left: 4px solid #ffc107; margin: 20px 0;">
+                <strong>Action needed:</strong> This task requires your immediate attention.
+              </p>
+              <p>Get it done! 💪</p>
+            </div>
+          `,
+      text: `Hey ${username},\n\nYour task "${taskName}" is past its deadline. Time to wrap it up!\n\nGet it done! 💪`
+    });
+
+    console.log(`${after_due_reminder} type mail sent to the user`);
+    return info.messageId
+  } catch (error) {
+    console.error("Email failed for the task " + taskId, error);
+    throw error;
+  }
+}
+
+export { sendEmail, sendCronEmail };

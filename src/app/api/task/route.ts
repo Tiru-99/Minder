@@ -44,7 +44,8 @@ export async function POST(request: NextRequest) {
         before6h : true , 
         before3h : true , 
         before1h : true ,
-        before0h : true 
+        before0h : true , 
+        after_due_reminder : true
       }
     });
 
@@ -67,7 +68,8 @@ export async function POST(request: NextRequest) {
       username: task.user.name,
       userEmail: task.user.email,
       //check for date types
-      taskDueDate: task.deadline
+      taskDueDate: task.deadline,
+      after_due_reminder : reminders.after_due_reminder
     }
 
     await scheduleEvent(data);
@@ -98,7 +100,7 @@ export async function GET() {
         }
       },
       include: {
-        reminders: true
+        reminder: true
       }
     });
 
@@ -144,23 +146,24 @@ export async function PATCH(req: NextRequest) {
             email: true
           }
         },
-        reminders: {
+        reminder: {
           select: {
             before48h: true,
             before12h: true,
             before6h: true,
             before3h: true,
-            before1h: true
+            before1h: true,
+            after_due_reminder : true 
           }
         }
       }
     });
 
-    if (!task || !task.reminders || !task.user?.name || !task.user?.email) {
+    if (!task || !task.reminder || !task.user?.name || !task.user?.email) {
       throw new Error("No task details found");
     }
 
-    const reminders = task.reminders;
+    const reminders = task.reminder;
 
     const reminderKeyArr = Object.keys(reminders).map(key => {
       return key
@@ -173,7 +176,8 @@ export async function PATCH(req: NextRequest) {
       username: task.user.name,
       userEmail: task.user.email,
       //check for date types
-      taskDueDate: task.deadline
+      taskDueDate: task.deadline,
+      after_due_reminder : task.reminder.after_due_reminder
     }
 
     await updateEvent(data);

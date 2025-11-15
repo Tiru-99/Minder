@@ -78,7 +78,7 @@ model Task {
   status    TaskStatus?
   userId    String
   user      User        @relation(fields: [userId], references: [id])
-  reminders Reminder[]
+  reminder  Reminder?
 }
 
 enum TaskType {
@@ -103,7 +103,7 @@ model Reminder {
   before1h           Boolean      @default(true)
   before0h           Boolean      @default(true)
   after_due_reminder AfterDueCron @default(after_every_24h)
-  taskId             String
+  taskId             String       @unique
   task               Task         @relation(fields: [taskId], references: [id])
 
   createdAt DateTime @default(now())

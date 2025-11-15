@@ -74,6 +74,12 @@ export async function POST(request: NextRequest) {
 
     await scheduleEvent(data);
 
+    return NextResponse.json({
+      success : true , 
+      task , 
+      message : "Task created successfully"
+    } , { status : 200 });
+
   } catch (error) {
     console.error("Error while inserting task:", error);
 
@@ -230,6 +236,11 @@ export async function DELETE(req: NextRequest) {
     });
 
     cancelEvent(task.id);
+
+    return NextResponse.json({
+      success : true ,
+      message : "Successfully deleted the task"
+    } , { status : 200 });
   } catch (error) {
     console.log("Task Deletion error : ", error);
     return NextResponse.json({

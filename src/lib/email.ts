@@ -1,66 +1,66 @@
+
 import nodemailer from 'nodemailer';
 
+
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASSWORD,
-    },
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS,
+  },
 });
 
 async function sendEmail({
-    taskId,
-    reminderType,
-    userEmail,
-    taskName,
-    taskDueDate,
-    userName,
+  taskId,
+  reminderType,
+  userEmail,
+  taskName,
+  taskDueDate,
+  userName,
 }: {
-    taskId: string;
-    reminderType: string;
-    userEmail: string;
-    taskName: string;
-    taskDueDate: Date;
-    userName?: string;
+  taskId: string;
+  reminderType: string;
+  userEmail: string;
+  taskName: string;
+  taskDueDate: Date;
+  userName?: string;
 }): Promise<string> {
-    try {
-        const emailContent = getEmailContentByType(reminderType, taskName, taskDueDate, taskId, userName);
+  try {
+    const emailContent = getEmailContentByType(reminderType, taskName, taskDueDate, taskId, userName);
 
-        const info = await transporter.sendMail({
-            from: '"Task Manager" <reminders@yourdomain.com>',
-            to: userEmail,
-            subject: emailContent.subject,
-            html: emailContent.html,
-            text: emailContent.text,
-        });
+    const info = await transporter.sendMail({
+      from: process.env.GMAIL_USER,
+      to: userEmail,
+      subject: emailContent.subject,
+      html: emailContent.html,
+      text: emailContent.text,
+    });
 
-        console.log(`✅ ${reminderType} email sent for task ${taskId}: ${info.messageId}`);
-        return info.messageId;
+    console.log(`✅ ${reminderType} email sent for task ${taskId}: ${info.messageId}`);
+    return info.messageId;
 
-    } catch (error) {
-        console.error(`❌ Email failed for task ${taskId} (${reminderType}):`, error);
-        throw error;
-    }
+  } catch (error) {
+    console.error(`❌ Email failed for task ${taskId} (${reminderType}):`, error);
+    throw error;
+  }
 }
 
 function getEmailContentByType(
-    reminderType: string,
-    taskName: string,
-    taskDueDate: Date,
-    taskId: string,
-    userName?: string
+  reminderType: string,
+  taskName: string,
+  taskDueDate: Date,
+  taskId: string,
+  userName?: string
 ): { subject: string; html: string; text: string } {
-    const greeting = userName ? `Hi ${userName}` : 'Hello';
-    const formattedDate = formatDate(taskDueDate);
-    const taskUrl = `${process.env.APP_URL}/tasks/${taskId}`;
+  const greeting = userName ? `Hi ${userName}` : 'Hello';
+  const formattedDate = formatDate(taskDueDate);
+  const taskUrl = `${process.env.APP_URL}/tasks/${taskId}`;
 
-    switch (reminderType) {
-        case "before48h":
-            return {
-                subject: `📅 Reminder: "${taskName}" due in 2 days`,
-                html: `
+  switch (reminderType) {
+    case "before48h":
+      return {
+        subject: `📅 Reminder: "${taskName}" due in 2 days`,
+        html: `
           <!DOCTYPE html>
           <html>
             <head>
@@ -108,7 +108,7 @@ function getEmailContentByType(
             </body>
           </html>
         `,
-                text: `
+        text: `
                     📅 EARLY REMINDER
 
                     ${greeting},
@@ -122,12 +122,12 @@ function getEmailContentByType(
 
                     View task: ${taskUrl}
                             `.trim()
-            };
+      };
 
-        case "before24h":
-            return {
-                subject: `⏰ Reminder: "${taskName}" due tomorrow`,
-                html: `
+    case "before24h":
+      return {
+        subject: `⏰ Reminder: "${taskName}" due tomorrow`,
+        html: `
           <!DOCTYPE html>
           <html>
             <head>
@@ -186,7 +186,7 @@ function getEmailContentByType(
             </body>
           </html>
         `,
-                text: `
+        text: `
 ⏰ 24-HOUR REMINDER
 
 ${greeting},
@@ -205,12 +205,12 @@ Now is a good time to:
 
 View task: ${taskUrl}
         `.trim()
-            };
+      };
 
-        case "before12h":
-            return {
-                subject: `🔔 Important: "${taskName}" due in 12 hours`,
-                html: `
+    case "before12h":
+      return {
+        subject: `🔔 Important: "${taskName}" due in 12 hours`,
+        html: `
           <!DOCTYPE html>
           <html>
             <head>
@@ -269,7 +269,7 @@ View task: ${taskUrl}
             </body>
           </html>
         `,
-                text: `
+        text: `
 🔔 12-HOUR WARNING
 
 ${greeting},
@@ -288,12 +288,12 @@ Quick checklist:
 
 View task: ${taskUrl}
         `.trim()
-            };
+      };
 
-        case "before6h":
-            return {
-                subject: `⚠️ Urgent: "${taskName}" due in 6 hours!`,
-                html: `
+    case "before6h":
+      return {
+        subject: `⚠️ Urgent: "${taskName}" due in 6 hours!`,
+        html: `
           <!DOCTYPE html>
           <html>
             <head>
@@ -356,7 +356,7 @@ View task: ${taskUrl}
             </body>
           </html>
         `,
-                text: `
+        text: `
 ⚠️ URGENT REMINDER - 6 HOURS LEFT!
 
 ${greeting},
@@ -375,12 +375,12 @@ Focus on:
 
 🔥 COMPLETE TASK NOW: ${taskUrl}
         `.trim()
-            };
+      };
 
-        case "before3h":
-            return {
-                subject: `🚨 CRITICAL: "${taskName}" due in 3 hours!`,
-                html: `
+    case "before3h":
+      return {
+        subject: `🚨 CRITICAL: "${taskName}" due in 3 hours!`,
+        html: `
           <!DOCTYPE html>
           <html>
             <head>
@@ -452,7 +452,7 @@ Focus on:
             </body>
           </html>
         `,
-                text: `
+        text: `
 🚨 CRITICAL DEADLINE - 3 HOURS LEFT!
 
 ${greeting},
@@ -473,12 +473,12 @@ Emergency mode:
 
 ⚡ START NOW: ${taskUrl}
         `.trim()
-            };
+      };
 
-        case "before1h":
-            return {
-                subject: `🔥 FINAL WARNING: "${taskName}" due in 1 HOUR!`,
-                html: `
+    case "before1h":
+      return {
+        subject: `🔥 FINAL WARNING: "${taskName}" due in 1 HOUR!`,
+        html: `
           <!DOCTYPE html>
           <html>
             <head>
@@ -570,7 +570,7 @@ Emergency mode:
             </body>
           </html>
         `,
-                text: `
+        text: `
 🔥🔥🔥 FINAL WARNING - 1 HOUR LEFT! 🔥🔥🔥
 
 ${greeting},
@@ -594,32 +594,32 @@ Due Date: ${formattedDate}
 ⚠️ THIS IS YOUR LAST REMINDER BEFORE THE DEADLINE! ⚠️
 Make every minute count!
         `.trim()
-            };
+      };
 
-        default:
-            return {
-                subject: `Reminder: "${taskName}"`,
-                html: `
+    default:
+      return {
+        subject: `Reminder: "${taskName}"`,
+        html: `
           <p>${greeting},</p>
           <p>This is a reminder about your task: <strong>${taskName}</strong></p>
           <p><strong>Due:</strong> ${formattedDate}</p>
           <p><a href="${taskUrl}">View Task</a></p>
         `,
-                text: `${greeting},\n\nReminder: ${taskName}\nDue: ${formattedDate}\n\nView: ${taskUrl}`
-            };
-    }
+        text: `${greeting},\n\nReminder: ${taskName}\nDue: ${formattedDate}\n\nView: ${taskUrl}`
+      };
+  }
 }
 
 function formatDate(date: Date): string {
-    return new Intl.DateTimeFormat('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZoneName: 'short'
-    }).format(date);
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZoneName: 'short'
+  }).format(date);
 }
 
 export { sendEmail };

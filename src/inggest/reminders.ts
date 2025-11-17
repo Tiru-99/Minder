@@ -3,7 +3,6 @@ import { changeTaskStatus } from "@/utils/changeTaskStatus";
 import { GetStepTools } from "inngest";
 import { inngest } from "./client";
 import { triggerCron } from "./events";
-import { after } from "node:test";
 
 //inngest step type 
 type StepTools = GetStepTools<typeof inngest>;
@@ -41,7 +40,7 @@ export const sendReminderStep = async (
     //sleep
     await step.sleep(`sleep-for-${waitTime}` , waitMs)
 
-    if(reminder === "0h"){
+    if(reminder === "0h" && after_due_reminder !== "none"){
       await changeTaskStatus(taskId);
       await triggerCron({taskId , after_due_reminder , username , userEmail , taskName}); 
     }

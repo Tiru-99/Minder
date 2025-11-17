@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getUserId } from "@/utils/getUserId";
-import { scheduleEvent, cancelEvent, updateEvent } from "@/inggest/events";
+import { scheduleEvent, cancelEvent, updateEvent , cancelCron } from "@/inggest/events";
 
 export async function POST(request: NextRequest) {
   const userId = await getUserId();
@@ -235,8 +235,9 @@ export async function DELETE(req: NextRequest) {
       }
     });
 
-    cancelEvent(task.id);
-
+    await cancelEvent(task.id);
+    await cancelCron(task.id); 
+    
     return NextResponse.json({
       success : true ,
       message : "Successfully deleted the task"

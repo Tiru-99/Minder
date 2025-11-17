@@ -102,7 +102,7 @@ model Reminder {
   before3h           Boolean      @default(false)
   before1h           Boolean      @default(true)
   before0h           Boolean      @default(true)
-  after_due_reminder AfterDueCron @default(after_every_24h)
+  after_due_reminder AfterDueCron 
   taskId             String       @unique
   task               Task         @relation(fields: [taskId], references: [id])
 
@@ -114,4 +114,5 @@ enum AfterDueCron {
   after_every_24h
   after_every_48h
   after_every_6h
+  none
 }

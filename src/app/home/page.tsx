@@ -1,8 +1,14 @@
+import Navbar from "@/components/Navbar"
+import TaskTable from "@/components/TaskTable"
 export default function Home(){
     return(
         <>
-            <div>
-                Hey there this is tiru
+            <div className="">
+                {/* Navbar component */}
+                <Navbar/>
+                {/* Main component */}
+                <TaskTable/>
+                {/* Sidebar component */}
             </div>
         </>
     )

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState} from "react";
 import { X } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion";
 import DatePicker from "./DatePicker";
@@ -38,8 +38,7 @@ export default function EditTaskModal({
     const [editedTask, setEditedTask] = useState<Task>(task);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>();
     const [selectedTime, setSelectedTime] = useState<string>("");
-    const [timeError, setTimeError] = useState<string>("");
-    const { mutate , isPending ,isError} = snoozeTask();
+    const { mutate , isPending } = snoozeTask();
 
 
     const handleInputChange = (
@@ -66,7 +65,6 @@ export default function EditTaskModal({
 
     const handleTimeChange = (time: string, errMsg: string) => {
         setSelectedTime(time);
-        setTimeError(errMsg);
     };
 
     const handleReminderChange = (key: string) => {
@@ -109,7 +107,11 @@ export default function EditTaskModal({
             return;
         }  
 
-        if(Object.keys(editedTask.reminder).length === 0){
+        const allBeforeFalse = Object.entries(editedTask.reminder).filter(
+            ([key]) => key.startsWith("before"))
+            .every(([_ ,value]) => value === false)
+        
+        if(allBeforeFalse){
             toast.error("Please select a reminder");
             return;
         }
@@ -138,7 +140,6 @@ export default function EditTaskModal({
     
     };
 
-    console.log("after due reminder", editedTask.reminder.after_due_reminder)
 
     return (
         <AnimatePresence>

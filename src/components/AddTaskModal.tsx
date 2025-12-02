@@ -13,13 +13,11 @@ import { toast } from "sonner";
 interface AddTaskModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onAdd: (newTask: Task) => void;
 }
 
 export default function AddTaskModal({
     isOpen,
-    onClose,
-    onAdd,
+    onClose
 }: AddTaskModalProps) {
     const initialTask: Task = {
         name: "",
@@ -36,7 +34,7 @@ export default function AddTaskModal({
             before1h: true,
         },
     };
-    const { mutate, isPending, error } = addTask();
+    const { mutate, isPending } = addTask();
     const [newTask, setNewTask] = useState<Task>(initialTask);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>();
     const [time, setTime] = useState({
@@ -59,7 +57,7 @@ export default function AddTaskModal({
             setNewTask(prev => ({ ...prev, due_date: "" }));
         }
     };
-    console.log("The new task is ", newTask);
+
     const handleTimeChange = (newTime: string, errMsg: string) => {
         setTime({
             time: newTime,
@@ -113,6 +111,11 @@ export default function AddTaskModal({
 
         if (!selectedDate) {
             console.log("No date found");
+            return;
+        }
+
+        if (!newTask.reminders || Object.values(newTask.reminders).every((value) => !value)) {
+            toast.error("Please select at least one reminder");
             return;
         }
 
@@ -192,7 +195,7 @@ export default function AddTaskModal({
                                     Category
                                 </label>
                                 <select
-                                    name="category"
+                                    name="type"
                                     value={newTask.type}
                                     onChange={handleInputChange}
                                     className="w-full rounded-lg bg-neutral-800 border border-neutral-700 px-3 py-2 text-white focus:border-neutral-500 focus:outline-none transition-colors"

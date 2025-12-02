@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, ChevronsLeftRightEllipsis, Loader2 } from "lucide-react";
 import { getTasks, deleteTask, moveToComplete } from "@/hooks/taskCrud";
 import { toast } from "sonner";
-
 import TaskTableSkeleton from "./TaskTableSkeleton";
+import { Task } from "@prisma/client";
 
 interface TaskTableProps {
   activeFilter?: string;
@@ -39,10 +39,13 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
   };
 
 
-  const { data, isLoading, error } = getTasks();
+  const { data, isLoading } = getTasks();
   const { mutate: deleteMutate, isPending: isDeleting } = deleteTask();
   const { mutate: moveComplete, isPending: isMoving } = moveToComplete();
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
 
   const filteredTasks = data?.filter(task => {
     const matchesSearch = task.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -59,7 +62,17 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
     return matchesSearch;
   }) ?? [];
 
-  const [tasks, setTasks] = useState(data ?? []);
+  // Reset to first page when filter or search changes
+  if (currentPage > 1 && filteredTasks.length > 0 && (currentPage - 1) * ITEMS_PER_PAGE >= filteredTasks.length) {
+    setCurrentPage(1);
+  }
+
+  const totalPages = Math.ceil(filteredTasks.length / ITEMS_PER_PAGE);
+  const paginatedTasks = filteredTasks.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
   const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -97,11 +110,9 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
   }
 
 
-  const handleDelete = (index: number) => {
-    if (!data) return;
-    const taskToDelete = data[index];
-    console.log("Task to delete", taskToDelete)
-    deleteMutate(taskToDelete.id, {
+
+  const handleDeleteTask = (taskId: string) => {
+    deleteMutate(taskId, {
       onSuccess: () => {
         toast.success("Task deleted successfully");
         setActiveMenuIndex(null);
@@ -112,11 +123,8 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
     });
   };
 
-  const handleComplete = (index: number) => {
-    if (!data) return;
-    const taskToUpdate = data[index];
-
-    moveComplete(taskToUpdate.id, {
+  const handleCompleteTask = (taskId: string) => {
+    moveComplete(taskId, {
       onSuccess: () => {
         toast.success("Task moved to completed");
         setActiveMenuIndex(null);
@@ -127,21 +135,29 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
     });
   };
 
-  const handleEdit = (index: number) => {
+  const handleEditTask = (taskId: string) => {
+    // We need to find the index in 'data' to set currentTaskIndex if we want to keep using it for EditModal
+    // Or we can just pass the task to EditModal directly if we change the state.
+    // The EditModal takes 'task={data[currentTaskIndex]}'.
+    // Let's find the index in 'data'.
+    const index = data?.findIndex(t => t.id === taskId) ?? 0;
     setCurrentTaskIndex(index);
     setIsEditModalOpen(true);
     setActiveMenuIndex(null);
   };
 
 
-  const handleAddTask = (newTask: any) => {
-    setTasks((prev) => [newTask, ...prev]);
-    setIsAddModalOpen(false);
-  };
-
   const handleOpenAddModal = () => {
-    if (data && data.length >= 7) {
-      toast.error("You can only have up to 7 tasks at a time.");
+    let count = 0;
+
+    data?.map((data) => {
+      if (data.status === "INCOMING") {
+        count++;
+      }
+    })
+
+    if (count >= 7) {
+      toast.error("You can only have up to 7 incoming tasks at a time.");
       return;
     }
     setIsAddModalOpen(true);
@@ -192,7 +208,6 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
       <AddTaskModal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
-        onAdd={handleAddTask}
       />
 
       {/* Aesthetic Search Bar */}
@@ -209,7 +224,10 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
             placeholder="Search for tasks..."
             className="w-full bg-transparent text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
           />
         </div>
         <button
@@ -222,8 +240,8 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
       </div>
 
       {/* Desktop View */}
-      <div className="hidden md:block overflow-x-auto relative">
-        {filteredTasks.length === 0 ? (
+      <div className="hidden md:block overflow-x-auto relative min-h-[400px]">
+        {paginatedTasks.length === 0 ? (
           activeFilter !== "All Tasks" ? (
             <div className="flex justify-center items-center h-full">
               <p className="text-neutral-400 font-medium text-xl">
@@ -239,171 +257,182 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
           )
 
         ) : (
-          <table className="w-full border border-neutral-200/12">
-            <thead>
-              <tr>
-                {firstColumn.map(({ key, value }) => (
-                  <th
-                    key={key}
-                    className="px-6 py-3 text-sm font-medium text-neutral-400 text-left"
-                  >
-                    {value}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            <tbody>
-              {filteredTasks.map((task, index) => (
-                <tr
-                  key={index}
-                  className="text-white border-t border-neutral-200/9 group"
-                >
-                  <td className="px-6 py-4 text-sm font-medium">
-                    {task.name}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm">
-                    {categoryBadge(
-                      task.type,
-                      categoryStyles[task.type] ?? ""
-                    )}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm">
-                    {statusBadge(task.status, statusStyles[task.status] ?? "")}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm">
-                    <div className="flex gap-2 flex-wrap">
-                      {Object.entries(task?.reminder ?? {})
-                        .filter(([_, v]) => v === true)
-                        .map(([k], i) => (
-                          <span
-                            key={i}
-                            className="text-[12px] text-neutral-400 bg-white/10 rounded px-2 py-0.5"
-                          >
-                            {k.replace("before", "").replace("h", "h")}
-                          </span>
-                        ))}
-                    </div>
-                  </td>
-
-                  <td className="px-6 py-4 text-sm">
-                    <span className="text-[12px] text-neutral-400 bg-white/10 rounded px-2 py-0.5">
-                      {formatAfterDue(task.reminder.after_due_reminder)}
-                    </span>
-                  </td>
-
-                  <td className="px-6 py-4 text-sm font-medium">
-                    {formatReadableDate(task.deadline)}
-                  </td>
-
-                  <td className="px-6 py-4 text-sm relative">
-                    <div
-                      className="relative"
-                      onMouseEnter={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const spaceBelow = window.innerHeight - rect.bottom;
-                        const menuHeight = 120; // Approx height of menu
-
-                        // If space below is less than menu height, open upwards
-                        const top = spaceBelow < menuHeight
-                          ? rect.top - menuHeight
-                          : rect.bottom + 4;
-
-                        setMenuPosition({
-                          top,
-                          left: rect.right - 192 // 192px is w-48
-                        });
-                        setActiveMenuIndex(index);
-                      }}
-                      onMouseLeave={() => {
-                        setActiveMenuIndex(null);
-                        setMenuPosition(null);
-                      }}
+          <>
+            <table className="w-full border border-neutral-200/12">
+              <thead>
+                <tr>
+                  {firstColumn.map(({ key, value }) => (
+                    <th
+                      key={key}
+                      className="px-6 py-3 text-sm font-medium text-neutral-400 text-left"
                     >
-                      <button className="p-1 rounded hover:bg-white/10 text-neutral-400 hover:text-white">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <circle cx="12" cy="12" r="1" />
-                          <circle cx="19" cy="12" r="1" />
-                          <circle cx="5" cy="12" r="1" />
-                        </svg>
-                      </button>
+                      {value}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
 
-                      <AnimatePresence>
-                        {activeMenuIndex === index && menuPosition && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            transition={{ duration: 0.1 }}
-                            style={{
-                              position: 'fixed',
-                              top: menuPosition.top,
-                              left: menuPosition.left,
-                              zIndex: 50
-                            }}
-                            className="w-48 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl overflow-hidden origin-top-right"
-                          >
-                            {task.status !== "COMPLETED" && (
+              <tbody>
+                {paginatedTasks.map((task, index) => (
+                  <tr
+                    key={index}
+                    className="text-white border-t border-neutral-200/9 group"
+                  >
+                    <td className="px-6 py-4 text-sm font-medium">
+                      {task.name}
+                    </td>
+
+                    <td className="px-6 py-4 text-sm">
+                      {categoryBadge(
+                        task.type,
+                        categoryStyles[task.type] ?? ""
+                      )}
+                    </td>
+
+                    <td className="px-6 py-4 text-sm">
+                      {statusBadge(task.status, statusStyles[task.status] ?? "")}
+                    </td>
+
+                    <td className="px-6 py-4 text-sm">
+                      <div className="flex gap-2 flex-wrap">
+                        {Object.entries(task?.reminder ?? {})
+                          .filter(([_, v]) => v === true)
+                          .map(([k], i) => (
+                            <span
+                              key={i}
+                              className="text-[12px] text-neutral-400 bg-white/10 rounded px-2 py-0.5"
+                            >
+                              {k.replace("before", "").replace("h", "h")}
+                            </span>
+                          ))}
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 text-sm">
+                      <span className="text-[12px] text-neutral-400 bg-white/10 rounded px-2 py-0.5">
+                        {formatAfterDue(task.reminder.after_due_reminder)}
+                      </span>
+                    </td>
+
+                    <td className="px-6 py-4 text-sm font-medium">
+                      {formatReadableDate(task.deadline)}
+                    </td>
+
+                    <td className="px-6 py-4 text-sm relative">
+                      <div
+                        className="relative"
+                        onMouseEnter={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const spaceBelow = window.innerHeight - rect.bottom;
+                          const menuHeight = 120; // Approx height of menu
+
+                          // If space below is less than menu height, open upwards
+                          const top = spaceBelow < menuHeight
+                            ? rect.top - menuHeight
+                            : rect.bottom + 4;
+
+                          setMenuPosition({
+                            top,
+                            left: rect.right - 192 // 192px is w-48
+                          });
+                          setActiveMenuIndex(index);
+                        }}
+                        onMouseLeave={() => {
+                          setActiveMenuIndex(null);
+                          setMenuPosition(null);
+                        }}
+                      >
+                        <button className="p-1 rounded hover:bg-white/10 text-neutral-400 hover:text-white">
+                          <ChevronsLeftRightEllipsis size={16} />
+                        </button>
+
+                        <AnimatePresence>
+                          {activeMenuIndex === index && menuPosition && (
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0.95 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ duration: 0.1 }}
+                              style={{
+                                position: 'fixed',
+                                top: menuPosition.top,
+                                left: menuPosition.left,
+                                zIndex: 50
+                              }}
+                              className="w-48 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl overflow-hidden origin-top-right"
+                            >
+                              {task.status !== "COMPLETED" && (
+                                <button
+                                  onClick={() => handleEditTask(task.id)}
+                                  className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                                >
+                                  Edit Task
+                                </button>
+                              )}
+                              {task.status !== "COMPLETED" && (
+                                <button
+                                  onClick={() => handleCompleteTask(task.id)}
+                                  disabled={isMoving}
+                                  className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  {isMoving ? (
+                                    <>
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                      Moving...
+                                    </>
+                                  ) : (
+                                    "Move to Completed"
+                                  )}
+                                </button>
+                              )}
                               <button
-                                onClick={() => handleEdit(index)}
-                                className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                                onClick={() => handleDeleteTask(task.id)}
+                                disabled={isDeleting}
+                                className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                               >
-                                Edit Task
-                              </button>
-                            )}
-                            {task.status !== "COMPLETED" && (
-                              <button
-                                onClick={() => handleComplete(index)}
-                                disabled={isMoving}
-                                className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                {isMoving ? (
+                                {isDeleting ? (
                                   <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    Moving...
+                                    Deleting...
                                   </>
                                 ) : (
-                                  "Move to Completed"
+                                  "Delete Task"
                                 )}
                               </button>
-                            )}
-                            <button
-                              onClick={() => handleDelete(index)}
-                              disabled={isDeleting}
-                              className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {isDeleting ? (
-                                <>
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                  Deleting...
-                                </>
-                              ) : (
-                                "Delete Task"
-                              )}
-                            </button>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
 
-          </table>
+            </table>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center mt-8 px-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-sm font-medium text-white bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-neutral-400">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 text-sm font-medium text-white bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
 
 
@@ -411,7 +440,7 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
 
       {/* Mobile View */}
       <div className="md:hidden space-y-4">
-        {filteredTasks.map((task, index) => (
+        {paginatedTasks.map((task, index) => (
           <div
             key={index}
             className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-4 space-y-3 relative"
@@ -424,21 +453,7 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
                   }
                   className="p-1 rounded hover:bg-white/10 text-neutral-400 hover:text-white"
                 >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="1" />
-                    <circle cx="19" cy="12" r="1" />
-                    <circle cx="5" cy="12" r="1" />
-                  </svg>
+                  <ChevronsLeftRightEllipsis size={16} />
                 </button>
 
                 <AnimatePresence>
@@ -452,7 +467,7 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
                     >
                       {task.status !== "COMPLETED" && (
                         <button
-                          onClick={() => handleEdit(index)}
+                          onClick={() => handleEditTask(task.id)}
                           className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
                         >
                           Edit Task
@@ -460,7 +475,7 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
                       )}
                       {task.status !== "COMPLETED" && (
                         <button
-                          onClick={() => handleComplete(index)}
+                          onClick={() => handleCompleteTask(task.id)}
                           disabled={isMoving}
                           className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -475,7 +490,7 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
                         </button>
                       )}
                       <button
-                        onClick={() => handleDelete(index)}
+                        onClick={() => handleDeleteTask(task.id)}
                         disabled={isDeleting}
                         className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -537,6 +552,29 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
             </div>
           </div>
         ))}
+
+        {/* Mobile Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex justify-between items-center mt-6 px-2 pb-4">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 text-sm font-medium text-white bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-neutral-400">
+              Page {currentPage} of {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 text-sm font-medium text-white bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Productivity Overview Section - Fills empty space */}

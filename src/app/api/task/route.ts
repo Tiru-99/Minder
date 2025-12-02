@@ -1,10 +1,14 @@
 // route to insert and get the task and update the task 
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import prisma , { Prisma }from "@/lib/prisma";
 import { getUserId } from "@/utils/backend/getUserId";
 import { scheduleEvent, cancelEvent, updateEvent, cancelCron } from "@/inggest/events";
 
+
+
+
 export async function POST(request: NextRequest) {
+  //Two phase commit pattern
   const userId = await getUserId();
   const { name, notes, deadline, type, reminders: incomingReminders, after_due_reminder } =
     await request.json();
@@ -160,7 +164,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const userId = await getUserId();
     const body = await req.json();
-    const { id, status, deadline, reminder: incomingReminders } = body;
+    const { id, deadline, reminder: incomingReminders } = body;
 
     if (!id) {
       return NextResponse.json(
@@ -169,22 +173,6 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    // Handle Status Update
-    if (status) {
-      const updatedTask = await prisma.task.update({
-        where: { id, userId },
-        data: { status },
-      });
-      return NextResponse.json({
-        success: true,
-        message: "Task status updated",
-        task: updatedTask,
-      });
-    }
-
-    // Handle Deadline/Reminder Update
-    const { after_due_reminder } = incomingReminders || {};
-
     if (!deadline || !incomingReminders) {
       return NextResponse.json(
         { success: false, error: "Incomplete fields for deadline update" },
@@ -192,73 +180,81 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
-    const result = await prisma.$transaction(async (tx) => {
-      const task = await tx.task.update({
-        where: { id: id, userId },
-        data: {
-          deadline: new Date(deadline),
-          reminder: {
-            update: {
-              ...incomingReminders,
-              after_due_reminder
-            }
+    const { after_due_reminder } = incomingReminders;
+
+  
+    const updatedTask = await prisma.task.update({
+      where: { id, userId },
+      data: {
+        deadline: new Date(deadline),
+        reminder: {
+          update: {
+            ...incomingReminders,
+            after_due_reminder,
           },
         },
-        include: {
-          user: { select: { name: true, email: true } },
-          reminder: {
-            select: {
-              before48h: true,
-              before12h: true,
-              before6h: true,
-              before3h: true,
-              before1h: true,
-              after_due_reminder: true,
-            },
+      },
+      include: {
+        user: { select: { name: true, email: true } },
+        reminder: {
+          select: {
+            before48h: true,
+            before12h: true,
+            before6h: true,
+            before3h: true,
+            before1h: true,
+            after_due_reminder: true,
           },
         },
-      });
-
-      if (!task || !task.reminder || !task.user?.name || !task.user?.email) {
-        throw new Error("Task user information missing");
-      }
-
-      const payload = {
-        taskId: task.id,
-        name: task.name,
-        reminders: Object.entries(task.reminder)
-          .filter(([_, v]) => v === true)
-          .map(([k]) => k),
-        username: task.user.name,
-        userEmail: task.user.email,
-        taskDueDate: task.deadline,
-        after_due_reminder: task.reminder.after_due_reminder,
-      };
-
-      await updateEvent(payload);
-
-      return task;
+      },
     });
+
+    if (
+      !updatedTask.user?.name ||
+      !updatedTask.user?.email ||
+      !updatedTask.reminder
+    ) {
+      return NextResponse.json(
+        { success: false, error: "Task user info missing" },
+        { status: 500 }
+      );
+    }
+
+    const payload = {
+      taskId: updatedTask.id,
+      name: updatedTask.name,
+      reminders: Object.entries(updatedTask.reminder)
+        .filter(([_, v]) => v === true)
+        .map(([k]) => k),
+      username: updatedTask.user.name,
+      userEmail: updatedTask.user.email,
+      taskDueDate: updatedTask.deadline,
+      after_due_reminder: updatedTask.reminder.after_due_reminder,
+    };
+
+    await updateEvent(payload);
 
     return NextResponse.json({
       success: true,
       message: "Task deadline updated",
-      task: result,
+      task: updatedTask,
     });
-
-  } catch (err: any) {
-    // Prisma "Record not found"
-    if (err.code === "P2025") {
-      return NextResponse.json(
-        { success: false, error: "Task not found or unauthorized." },
-        { status: 404 }
-      );
+  } catch (err) {
+    if(err instanceof Prisma.PrismaClientKnownRequestError){
+      if(err.code === "P2025"){
+        return NextResponse.json(
+          { success: false, error: "Task not found or unauthorized." },
+          { status: 404 }
+        );
+      }
     }
+
+    const message = err instanceof Error ? err.message : "Internal server error";
 
     return NextResponse.json(
       {
         success: false,
-        error: err.message ?? "Something went wrong updating the task",
+        error: message,
       },
       { status: 500 }
     );
@@ -267,60 +263,57 @@ export async function PATCH(req: NextRequest) {
 
 
 
+
 export async function DELETE(req: NextRequest) {
-  const userId = await getUserId();
-  const { searchParams } = new URL(req.url);
-  const taskId = searchParams.get("taskId");
-
-  if (!taskId) {
-    throw new Error("taskId not received in the backend");
-  }
-
   try {
-    const result = await prisma.$transaction(async (tx) => {
-      const task = await tx.task.findFirst({
-        where: {
-          id: taskId,
-          userId
-        }
-      });
+    const userId = await getUserId();
+    const { searchParams } = new URL(req.url);
+    const taskId = searchParams.get("taskId");
 
-      if (!task) {
-        return { notFound: true };
-      }
-
-      await tx.task.delete({
-        where: { id: taskId }
-      });
-
-      await cancelEvent(task.id);
-      await cancelCron(task.id);
-
-      return { notFound: false };
-    });
-
-    if (result.notFound) {
+    if (!taskId) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Task not found"
-        },
+        { success: false, error: "taskId not provided" },
         { status: 400 }
       );
     }
 
+    const task = await prisma.task.findUnique({
+      where: { id: taskId, userId },
+    });
+
+    if (!task) {
+      return NextResponse.json(
+        { success: false, error: "Task not found" },
+        { status: 404 }
+      );
+    }
+
+    try {
+      await cancelEvent(taskId);
+      await cancelCron(taskId);
+    } catch (err) {
+      console.error("External cleanup failed:", err);
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Failed to remove scheduled jobs. Task was NOT deleted.",
+        },
+        { status: 500 }
+      );
+    }
+
+    await prisma.task.delete({ where: { id: taskId } });
+
     return NextResponse.json(
-      {
-        success: true,
-        message: "Successfully deleted the task"
-      },
+      { success: true, message: "Task deleted successfully" },
       { status: 200 }
     );
-  } catch (error) {
-    console.log("Task Deletion error :", error);
-    return NextResponse.json({
-      success: false,
-      error: "Something went wrong while deleting task"
-    });
+
+  } catch (err) {
+    console.error("Task deletion error:", err);
+    return NextResponse.json(
+      { success: false, error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

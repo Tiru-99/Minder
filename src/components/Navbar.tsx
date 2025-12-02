@@ -14,9 +14,19 @@ import {
     Sparkles,
     Bug,
     LogOut,
-    ChevronRight
+    ChevronRight,
+    Github
 } from "lucide-react";
+import Link from "next/link";
+import { ForwardRefExoticComponent, RefAttributes } from "react";
+import { LucideProps } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+
+interface ItemType {
+    name : string , 
+    icon : ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>, 
+    active : boolean
+}
 
 export default function Navbar() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -40,7 +50,7 @@ export default function Navbar() {
         { name: "Report Bug", icon: Bug, active: false },
     ];
 
-    const Section = ({ title, items }: { title: string, items: any[] }) => (
+    const Section = ({ title, items }: { title: string, items: ItemType[] }) => (
         <div>
             <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4 px-2">
                 {title}
@@ -78,7 +88,14 @@ export default function Navbar() {
                     </button>
                     <h1 className="text-2xl md:text-3xl text-gray-400 tracking-wide font-bold">MINDER</h1>
                 </div>
-                <button className="hidden md:block border border-white text-white p-3">Star on Github</button>
+                <Link
+                    href="https://github.com/Tiru-99/Minder"
+                    target="_blank"
+                    className="hidden md:flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-full transition-all hover:scale-105 active:scale-95 group"
+                >
+                    <Github className="w-4 h-4 text-white/70 group-hover:text-white transition-colors" />
+                    <span>Star on GitHub</span>
+                </Link>
             </div>
 
             <AnimatePresence>

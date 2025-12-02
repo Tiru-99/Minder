@@ -10,7 +10,6 @@ import prisma from "@/lib/prisma";
 export const scheduleReminder = inngest.createFunction(
   {
     id: ScheduleReminder.REMINDER_ID,
-    idempotency : "event.data.taskId",
     cancelOn: [
       {
         event: ScheduleReminder.CANCEL_EVENT,
@@ -37,7 +36,6 @@ export const scheduleReminder = inngest.createFunction(
 export const moveToOverdue = inngest.createFunction(
   {
     id: ScheduleReminder.OVERDUE_ID,
-    idempotency : "event.data.taskId",
     cancelOn: [
       {
         event: ScheduleReminder.CANCEL_CRON_EVENT,

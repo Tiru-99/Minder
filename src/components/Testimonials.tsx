@@ -64,7 +64,7 @@ export default function Testimonials() {
                         >
                             <Quote className="w-10 h-10 text-white/10 absolute top-6 right-6" />
                             <p className="text-neutral-300 mb-8 leading-relaxed relative z-10">
-                                "{testimonial.quote}"
+                                &quot;{testimonial.quote}&quot;
                             </p>
                             <div className="flex items-center gap-4">
                                 <div className={`w-10 h-10 rounded-full ${testimonial.color} flex items-center justify-center text-white font-bold text-sm`}>

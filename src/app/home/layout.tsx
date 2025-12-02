@@ -1,4 +1,6 @@
 
+export const dynamic = "force-dynamic";
+
 import { requireAuth } from "@/lib/session";
 
 export default async function Layout({ children }: { children: React.ReactNode }) {

@@ -86,7 +86,7 @@ export default function Navbar() {
                     >
                         <Menu size={24} />
                     </button>
-                    <h1 className="text-2xl md:text-3xl text-gray-400 tracking-wide font-bold">MINDER</h1>
+                    <h1 className="text-2xl md:text-3xl text-gray-400 tracking-wide font-serif font-bold">Minder</h1>
                 </div>
                 <Link
                     href="https://github.com/Tiru-99/Minder"

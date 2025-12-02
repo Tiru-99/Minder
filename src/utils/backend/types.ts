@@ -6,7 +6,8 @@ export enum ScheduleReminder {
     CRON_TRIGGER_EVENT="overdue-task/cron",
     CRON_ID = "cron-trigger/job",
     CRON_EVENT="cron-event/trigger", 
-    CANCEL_CRON_EVENT="cron-event/cancel"
+    CANCEL_CRON_EVENT="cron-event/cancel",
+    CLEANUP_CRON_EVENT="cron-event/cleanup"
 }
 
 export interface SchedulePayloadType {

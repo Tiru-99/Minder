@@ -88,6 +88,7 @@ enum TaskType {
 }
 
 enum TaskStatus {
+  PENDING_INCOMING
   INCOMING
   COMPLETED
   OVERDUE
@@ -104,7 +105,7 @@ model Reminder {
   before0h           Boolean      @default(true)
   after_due_reminder AfterDueCron 
   taskId             String       @unique
-  task               Task         @relation(fields: [taskId], references: [id])
+  task               Task         @relation(fields: [taskId], references: [id] , onDelete: Cascade)
 
   createdAt DateTime @default(now())
 }
@@ -114,5 +115,6 @@ enum AfterDueCron {
   after_every_24h
   after_every_48h
   after_every_6h
+  after_every_3h
   none
 }

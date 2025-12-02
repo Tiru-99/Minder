@@ -1,6 +1,6 @@
 
 //normal email and cron email 
-import { transporter } from "@/utils/nodemailer";
+import { transporter } from "@/utils/backend/nodemailer";
 
 async function sendEmail({
   taskId,

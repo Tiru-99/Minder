@@ -1,8 +1,8 @@
-import { PrismaClient , Prisma } from "@prisma/client";
+import { PrismaClient, Prisma } from "@prisma/client";
 
 class PrismaInstance {
     private static instance: PrismaClient;
-    private constructor() {}
+    private constructor() { }
 
     public static getInstance(): PrismaClient {
         if (!PrismaInstance.instance) {

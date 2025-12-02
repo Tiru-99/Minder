@@ -1,89 +1,72 @@
-export default function TaskTable() {
+"use client"
+import { useState } from "react";
+import EditTaskModal from "./EditTaskModal";
+import AddTaskModal from "./AddTaskModal";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, Plus, ChevronsLeftRightEllipsis, Loader2 } from "lucide-react";
+import { getTasks, deleteTask, moveToComplete } from "@/hooks/taskCrud";
+import { toast } from "sonner";
+
+import TaskTableSkeleton from "./TaskTableSkeleton";
+
+interface TaskTableProps {
+  activeFilter?: string;
+}
+
+export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps) {
   const firstColumn = [
-    { key: "task_name", value: "Task Name" },
+    { key: "name", value: "Task Name" },
     { key: "category", value: "Category" },
     { key: "status", value: "Status" },
     { key: "reminders", value: "Reminders" },
     { key: "after_due", value: "After Due Reminders" },
-    { key: "due_date", value: "Due Date" },
+    { key: "deadline", value: "Due Date" },
+    { key: "actions", value: "" },
   ];
 
   const categoryStyles: Record<string, string> = {
-    Work: "border-yellow-400/40 bg-yellow-400/10 text-yellow-300",
-    Personal: "border-blue-400/40 bg-blue-400/10 text-blue-300",
-    Health: "border-green-400/40 bg-green-400/10 text-green-300",
+    WORK: "border-yellow-400/40 bg-yellow-400/10 text-yellow-300",
+    PERSONAL: "border-blue-400/40 bg-blue-400/10 text-blue-300",
+    HEALTH: "border-green-400/40 bg-green-400/10 text-green-300",
   };
 
   const statusStyles: Record<string, string> = {
-    Incoming: "bg-yellow-500/20 text-yellow-300",
-    Pending: "bg-orange-500/20 text-orange-300",
-    Ongoing: "bg-blue-500/20 text-blue-300",
-    Due: "bg-red-500/25 text-red-300",
+    INCOMING: "bg-yellow-500/20 text-yellow-300",
+    PENDING: "bg-orange-500/20 text-orange-300",
+    ONGOING: "bg-blue-500/20 text-blue-300",
+    DUE: "bg-red-500/25 text-red-300",
+    COMPLETED: "bg-green-500/20 text-green-300",
   };
 
-  const tasks = [
-    {
-      task_name: "Mutthi",
-      category: "Work",
-      status: "Incoming",
-      due_date: "12 Nov",
-      after_due_reminder: "after_every_24h",
-      reminders: {
-        before48h: true,
-        before24h: true,
-        before12h: true,
-        before6h: true,
-        before3h: true,
-        before1h: true,
-      },
-    },
-    {
-      task_name: "Groceries",
-      category: "Personal",
-      status: "Pending",
-      due_date: "18 Nov",
-      after_due_reminder: "none",
-      reminders: {
-        before48h: false,
-        before24h: true,
-        before12h: false,
-        before6h: false,
-        before3h: false,
-        before1h: false,
-      },
-    },
-    {
-      task_name: "Blood Test",
-      category: "Health",
-      status: "Due",
-      due_date: "20 Nov",
-      after_due_reminder: "after_every_12h",
-      reminders: {
-        before48h: false,
-        before24h: false,
-        before12h: false,
-        before6h: true,
-        before3h: true,
-        before1h: true,
-      },
-    },
-    {
-      task_name: "Project Review",
-      category: "Work",
-      status: "Ongoing",
-      due_date: "22 Nov",
-      after_due_reminder: "after_every_48h",
-      reminders: {
-        before48h: true,
-        before24h: true,
-        before12h: false,
-        before6h: false,
-        before3h: false,
-        before1h: false,
-      },
-    },
-  ];
 
+  const { data, isLoading, error } = getTasks();
+  const { mutate: deleteMutate, isPending: isDeleting } = deleteTask();
+  const { mutate: moveComplete, isPending: isMoving } = moveToComplete();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredTasks = data?.filter(task => {
+    const matchesSearch = task.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+    if (activeFilter === "All Tasks") return matchesSearch;
+    if (activeFilter === "Incoming") return task.status === "INCOMING" && matchesSearch;
+    if (activeFilter === "Completed") return task.status === "COMPLETED" && matchesSearch;
+    if (activeFilter === "Overdue") return task.status === "DUE" && matchesSearch;
+
+    if (["Work", "Health", "Personal"].includes(activeFilter)) {
+      return task.type === activeFilter.toUpperCase() && matchesSearch;
+    }
+
+    return matchesSearch;
+  }) ?? [];
+
+  const [tasks, setTasks] = useState(data ?? []);
+  const [activeMenuIndex, setActiveMenuIndex] = useState<number | null>(null);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [currentTaskIndex, setCurrentTaskIndex] = useState<number | null>(null);
+
+  console.log("The data from be is ", data);
   const categoryBadge = (text: string, style: string) => (
     <span
       className={`inline-block rounded-md border px-2 py-1 text-[13px] font-medium ${style}`}
@@ -101,76 +84,479 @@ export default function TaskTable() {
   );
 
   const formatAfterDue = (val: string) => {
+    if (!val) return "";
     if (val === "none") return "none";
     return val.replace("after_every_", "").replace("h", "h");
   };
 
+  const formatReadableDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString("en-IN", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  }
+
+
+  const handleDelete = (index: number) => {
+    if (!data) return;
+    const taskToDelete = data[index];
+    console.log("Task to delete", taskToDelete)
+    deleteMutate(taskToDelete.id, {
+      onSuccess: () => {
+        toast.success("Task deleted successfully");
+        setActiveMenuIndex(null);
+      },
+      onError: () => {
+        toast.error("Failed to delete task");
+      }
+    });
+  };
+
+  const handleComplete = (index: number) => {
+    if (!data) return;
+    const taskToUpdate = data[index];
+
+    moveComplete(taskToUpdate.id, {
+      onSuccess: () => {
+        toast.success("Task moved to completed");
+        setActiveMenuIndex(null);
+      },
+      onError: () => {
+        toast.error("Failed to update task status");
+      }
+    });
+  };
+
+  const handleEdit = (index: number) => {
+    setCurrentTaskIndex(index);
+    setIsEditModalOpen(true);
+    setActiveMenuIndex(null);
+  };
+
+
+  const handleAddTask = (newTask: any) => {
+    setTasks((prev) => [newTask, ...prev]);
+    setIsAddModalOpen(false);
+  };
+
+  const handleOpenAddModal = () => {
+    if (data && data.length >= 7) {
+      toast.error("You can only have up to 7 tasks at a time.");
+      return;
+    }
+    setIsAddModalOpen(true);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-4 md:px-18 md:pt-8">
+        {/* Aesthetic Search Bar */}
+        <div className="mb-8 relative group max-w-2xl">
+          <h1 className="text-gray-400 text-5xl font-bold tracking-wide pb-4">TASKS</h1>
+          <div className="absolute -inset-px bg-linear-to-r from-transparent via-white/10 to-transparent rounded-xl opacity-50 blur-sm group-hover:opacity-75 transition duration-500" />
+        </div>
+
+        <div className="flex flex-col md:flex-row justify-between w-full items-center pb-4 gap-4 md:gap-0">
+          <div className="relative flex items-center gap-3 bg-black/50 backdrop-blur-xl border border-white/10 px-4 py-3.5 rounded-xl shadow-2xl w-full md:w-96 transition-all duration-300">
+            <Search className="w-5 h-5 text-neutral-500" />
+            <input
+              type="text"
+              placeholder="Search for tasks..."
+              className="w-full bg-transparent text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none"
+              readOnly
+            />
+          </div>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="w-full md:w-auto flex justify-center items-center gap-2 px-5 py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-neutral-200 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-95"
+          >
+            <Plus size={18} />
+            Add Task
+          </button>
+        </div>
+        <TaskTableSkeleton />
+      </div>
+    );
+  }
+
   return (
-    <div className="p-24">
-      <div className="overflow-x-auto">
-        <table className="w-full border border-neutral-200/12">
-          <thead>
-            <tr>
-              {firstColumn.map(({ key, value }) => (
-                <th
-                  key={key}
-                  className="px-6 py-3 text-sm font-medium text-neutral-400 text-left"
-                >
-                  {value}
-                </th>
-              ))}
-            </tr>
-          </thead>
+    <div className="p-4 md:px-18 md:pt-8">
+      {data && currentTaskIndex !== null && (
+        <EditTaskModal
+          task={data[currentTaskIndex]}
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+        />
+      )}
 
-          <tbody>
-            {tasks.map((task, index) => (
-              <tr
-                key={index}
-                className="text-white border-t border-neutral-200/9"
-              >
-                <td className="px-6 py-4 text-sm font-medium">
-                  {task.task_name}
-                </td>
+      <AddTaskModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddTask}
+      />
 
-                <td className="px-6 py-4 text-sm">
-                  {categoryBadge(
-                    task.category,
-                    categoryStyles[task.category] ?? ""
-                  )}
-                </td>
+      {/* Aesthetic Search Bar */}
+      <div className="mb-8 relative group max-w-2xl">
+        <h1 className="text-gray-400 text-5xl font-bold tracking-wide pb-4">TASKS</h1>
+        <div className="absolute -inset-px bg-linear-to-r from-transparent via-white/10 to-transparent rounded-xl opacity-50 blur-sm group-hover:opacity-75 transition duration-500" />
+      </div>
 
-                <td className="px-6 py-4 text-sm">
-                  {statusBadge(task.status, statusStyles[task.status] ?? "")}
-                </td>
+      <div className="flex flex-col md:flex-row justify-between w-full items-center pb-4 gap-4 md:gap-0">
+        <div className="relative flex items-center gap-3 bg-black/50 backdrop-blur-xl border border-white/10 px-4 py-3.5 rounded-xl shadow-2xl w-full md:w-96 transition-all duration-300">
+          <Search className="w-5 h-5 text-neutral-500" />
+          <input
+            type="text"
+            placeholder="Search for tasks..."
+            className="w-full bg-transparent text-sm text-neutral-200 placeholder:text-neutral-600 focus:outline-none"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        <button
+          onClick={handleOpenAddModal}
+          className="w-full md:w-auto flex justify-center items-center gap-2 px-5 py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-neutral-200 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-95"
+        >
+          <Plus size={18} />
+          Add Task
+        </button>
+      </div>
 
-                <td className="px-6 py-4 text-sm">
-                  <div className="flex gap-2 flex-wrap">
-                    {Object.entries(task.reminders)
-                      .filter(([_, v]) => v === true)
-                      .map(([k], i) => (
-                        <span
-                          key={i}
-                          className="text-[12px] text-neutral-400 bg-white/10 rounded px-2 py-0.5"
-                        >
-                          {k.replace("before", "").replace("h", "h")}
-                        </span>
-                      ))}
-                  </div>
-                </td>
+      {/* Desktop View */}
+      <div className="hidden md:block overflow-x-auto relative">
+        {filteredTasks.length === 0 ? (
+          activeFilter !== "All Tasks" ? (
+            <div className="flex justify-center items-center h-full">
+              <p className="text-neutral-400 font-medium text-xl">
+                No tasks found for {activeFilter}
+              </p>
+            </div>
+          ) : (
+            <div className="flex justify-center items-center h-full">
+              <p className="text-neutral-400 font-medium text-xl">
+                No tasks found
+              </p>
+            </div>
+          )
 
-                <td className="px-6 py-4 text-sm">
-                    <span className="text-[12px] text-neutral-400 bg-white/10 rounded px-2 py-0.5">
-                      {formatAfterDue(task.after_due_reminder)}
-                    </span>
-                </td>
-
-                <td className="px-6 py-4 text-sm font-medium">
-                  {task.due_date}
-                </td>
+        ) : (
+          <table className="w-full border border-neutral-200/12">
+            <thead>
+              <tr>
+                {firstColumn.map(({ key, value }) => (
+                  <th
+                    key={key}
+                    className="px-6 py-3 text-sm font-medium text-neutral-400 text-left"
+                  >
+                    {value}
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+
+            <tbody>
+              {filteredTasks.map((task, index) => (
+                <tr
+                  key={index}
+                  className="text-white border-t border-neutral-200/9 group"
+                >
+                  <td className="px-6 py-4 text-sm font-medium">
+                    {task.name}
+                  </td>
+
+                  <td className="px-6 py-4 text-sm">
+                    {categoryBadge(
+                      task.type,
+                      categoryStyles[task.type] ?? ""
+                    )}
+                  </td>
+
+                  <td className="px-6 py-4 text-sm">
+                    {statusBadge(task.status, statusStyles[task.status] ?? "")}
+                  </td>
+
+                  <td className="px-6 py-4 text-sm">
+                    <div className="flex gap-2 flex-wrap">
+                      {Object.entries(task?.reminder ?? {})
+                        .filter(([_, v]) => v === true)
+                        .map(([k], i) => (
+                          <span
+                            key={i}
+                            className="text-[12px] text-neutral-400 bg-white/10 rounded px-2 py-0.5"
+                          >
+                            {k.replace("before", "").replace("h", "h")}
+                          </span>
+                        ))}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 text-sm">
+                    <span className="text-[12px] text-neutral-400 bg-white/10 rounded px-2 py-0.5">
+                      {formatAfterDue(task.reminder.after_due_reminder)}
+                    </span>
+                  </td>
+
+                  <td className="px-6 py-4 text-sm font-medium">
+                    {formatReadableDate(task.deadline)}
+                  </td>
+
+                  <td className="px-6 py-4 text-sm relative">
+                    <div
+                      className="relative"
+                      onMouseEnter={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const spaceBelow = window.innerHeight - rect.bottom;
+                        const menuHeight = 120; // Approx height of menu
+
+                        // If space below is less than menu height, open upwards
+                        const top = spaceBelow < menuHeight
+                          ? rect.top - menuHeight
+                          : rect.bottom + 4;
+
+                        setMenuPosition({
+                          top,
+                          left: rect.right - 192 // 192px is w-48
+                        });
+                        setActiveMenuIndex(index);
+                      }}
+                      onMouseLeave={() => {
+                        setActiveMenuIndex(null);
+                        setMenuPosition(null);
+                      }}
+                    >
+                      <button className="p-1 rounded hover:bg-white/10 text-neutral-400 hover:text-white">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        >
+                          <circle cx="12" cy="12" r="1" />
+                          <circle cx="19" cy="12" r="1" />
+                          <circle cx="5" cy="12" r="1" />
+                        </svg>
+                      </button>
+
+                      <AnimatePresence>
+                        {activeMenuIndex === index && menuPosition && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.1 }}
+                            style={{
+                              position: 'fixed',
+                              top: menuPosition.top,
+                              left: menuPosition.left,
+                              zIndex: 50
+                            }}
+                            className="w-48 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl overflow-hidden origin-top-right"
+                          >
+                            {task.status !== "COMPLETED" && (
+                              <button
+                                onClick={() => handleEdit(index)}
+                                className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                              >
+                                Edit Task
+                              </button>
+                            )}
+                            {task.status !== "COMPLETED" && (
+                              <button
+                                onClick={() => handleComplete(index)}
+                                disabled={isMoving}
+                                className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                {isMoving ? (
+                                  <>
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                    Moving...
+                                  </>
+                                ) : (
+                                  "Move to Completed"
+                                )}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDelete(index)}
+                              disabled={isDeleting}
+                              className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isDeleting ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Deleting...
+                                </>
+                              ) : (
+                                "Delete Task"
+                              )}
+                            </button>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+
+          </table>
+        )}
+
+
+      </div>
+
+      {/* Mobile View */}
+      <div className="md:hidden space-y-4">
+        {filteredTasks.map((task, index) => (
+          <div
+            key={index}
+            className="bg-neutral-900/50 border border-neutral-800 rounded-lg p-4 space-y-3 relative"
+          >
+            <div className="absolute top-4 right-4 ">
+              <div className="relative">
+                <button
+                  onClick={() =>
+                    setActiveMenuIndex(activeMenuIndex === index ? null : index)
+                  }
+                  className="p-1 rounded hover:bg-white/10 text-neutral-400 hover:text-white"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="1" />
+                    <circle cx="19" cy="12" r="1" />
+                    <circle cx="5" cy="12" r="1" />
+                  </svg>
+                </button>
+
+                <AnimatePresence>
+                  {activeMenuIndex === index && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      transition={{ duration: 0.1 }}
+                      className="absolute right-0 top-full mt-1 w-48 bg-neutral-900 border border-neutral-800 rounded-lg shadow-xl z-10 overflow-hidden origin-top-right"
+                    >
+                      {task.status !== "COMPLETED" && (
+                        <button
+                          onClick={() => handleEdit(index)}
+                          className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                        >
+                          Edit Task
+                        </button>
+                      )}
+                      {task.status !== "COMPLETED" && (
+                        <button
+                          onClick={() => handleComplete(index)}
+                          disabled={isMoving}
+                          className="w-full text-left px-4 py-2 text-sm text-neutral-300 hover:bg-neutral-800 hover:text-white flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {isMoving ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Moving...
+                            </>
+                          ) : (
+                            "Move to Completed"
+                          )}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(index)}
+                        disabled={isDeleting}
+                        className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isDeleting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Deleting...
+                          </>
+                        ) : (
+                          "Delete Task"
+                        )}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-start pr-8">
+              <div>
+                <h3 className="text-white font-medium text-lg">
+                  {task.name}
+                </h3>
+                <p className="text-neutral-400 text-sm mt-1">
+                  Due: {task.deadline}
+                </p>
+              </div>
+              {statusBadge(task.status, statusStyles[task.status] ?? "")}
+            </div>
+
+            <div className="flex items-center gap-2">
+              {categoryBadge(task.type, categoryStyles[task.type] ?? "")}
+            </div>
+
+            <div className="pt-2 border-t border-neutral-800">
+              <p className="text-xs text-neutral-500 mb-2 uppercase font-semibold">
+                Reminders
+              </p>
+              <div className="flex gap-2 flex-wrap mb-2">
+                {Object.entries(task.reminder)
+                  .filter(([_, v]) => v === true)
+                  .map(([k], i) => (
+                    <span
+                      key={i}
+                      className="text-[12px] text-neutral-400 bg-white/10 rounded px-2 py-0.5"
+                    >
+                      {k.replace("before", "").replace("h", "h")}
+                    </span>
+                  ))}
+              </div>
+              {task.reminder.after_due_reminder !== "none" && (
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-xs text-neutral-500">After Due:</span>
+                  <span className="text-[12px] text-neutral-400 bg-white/10 rounded px-2 py-0.5">
+                    {formatAfterDue(task.reminder.after_due_reminder)}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Productivity Overview Section - Fills empty space */}
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-neutral-900/50 border border-neutral-800 p-6 rounded-xl">
+          <h3 className="text-neutral-400 text-sm font-medium mb-2">Total Tasks</h3>
+          <p className="text-3xl font-bold text-white">{data?.length}</p>
+        </div>
+        <div className="bg-neutral-900/50 border border-neutral-800 p-6 rounded-xl">
+          <h3 className="text-neutral-400 text-sm font-medium mb-2">Completed</h3>
+          <p className="text-3xl font-bold text-green-400">
+            {data?.filter(t => t.status === 'COMPLETED').length}
+          </p>
+        </div>
+        <div className="bg-neutral-900/50 border border-neutral-800 p-6 rounded-xl">
+          <h3 className="text-neutral-400 text-sm font-medium mb-2">Pending</h3>
+          <p className="text-3xl font-bold text-yellow-400">
+            {data?.filter(t => t.status !== 'COMPLETED').length}
+          </p>
+        </div>
       </div>
     </div>
   );

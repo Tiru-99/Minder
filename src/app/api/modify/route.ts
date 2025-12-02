@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getUserId } from "@/utils/getUserId";
+import { getUserId } from "@/utils/backend/getUserId";
 import prisma from "@/lib/prisma";
 import { cancelCron, cancelEvent } from "@/inggest/events";
 
@@ -47,10 +47,10 @@ export async function PATCH(req: NextRequest) {
             message: "Successfully updated the task"
         }, { status: 200 })
     } catch (error) {
-        console.error("task updating to complete failed" , error); 
+        console.error("task updating to complete failed", error);
         return NextResponse.json({
-            success : false , 
-            message : "Something went wrong while updating status"
-        } , { status : 500 });
+            success: false,
+            message: "Something went wrong while updating status"
+        }, { status: 500 });
     }
 }

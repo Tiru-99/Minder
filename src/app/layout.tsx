@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
 import "./globals.css";
+import QueryProvider from "@/components/QueryProvider";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   subsets: ["latin"],
@@ -31,10 +33,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-   return (
+  return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} bg-black`}>
       <body className={`${geistSans.className} antialiased`} suppressHydrationWarning>
-        {children}
+        <QueryProvider>{children}</QueryProvider>
+        <Toaster position="bottom-center"/>
       </body>
     </html>
   );

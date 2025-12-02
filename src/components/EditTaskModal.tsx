@@ -5,7 +5,7 @@ import DatePicker from "./DatePicker";
 import TimePickerComponent from "./TimePicker"; 
 import { formatDateTime } from "@/utils/frontend/formatDateTime";
 import { toast } from "sonner";
-import { snoozeTask } from "@/hooks/taskCrud";
+import { useSnoozeTask } from "@/hooks/taskCrud";
 
 interface Task {
     id : string ; 
@@ -38,7 +38,7 @@ export default function EditTaskModal({
     const [editedTask, setEditedTask] = useState<Task>(task);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>();
     const [selectedTime, setSelectedTime] = useState<string>("");
-    const { mutate , isPending } = snoozeTask();
+    const { mutate , isPending } = useSnoozeTask();
 
 
     const handleInputChange = (

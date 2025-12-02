@@ -9,7 +9,7 @@ interface AnimatedGridPatternProps {
     height?: number;
     x?: number;
     y?: number;
-    strokeDasharray?: any;
+    strokeDasharray?: number;
     numSquares?: number;
     className?: string;
     maxOpacity?: number;
@@ -52,7 +52,7 @@ export function AnimatedGridPattern({
 
     useEffect(() => {
         const resizeObserver = new ResizeObserver((entries) => {
-            for (let entry of entries) {
+            for (const entry of entries) {
                 setDimensions({
                     width: entry.contentRect.width,
                     height: entry.contentRect.height,

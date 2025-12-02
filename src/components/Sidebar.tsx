@@ -19,11 +19,18 @@ import {
 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
+import { ForwardRefExoticComponent, RefAttributes } from "react";
+import { LucideProps } from "lucide-react";
 import { toast } from "sonner";
 
 interface SidebarProps {
     activeFilter: string;
     onFilterChange: (filter: string) => void;
+}
+
+interface ItemProps {
+    name : string ;
+    icon : ForwardRefExoticComponent<LucideProps & RefAttributes<SVGSVGElement>>
 }
 
 export default function Sidebar({ activeFilter, onFilterChange }: SidebarProps) {
@@ -62,7 +69,7 @@ export default function Sidebar({ activeFilter, onFilterChange }: SidebarProps) 
         }
     }
 
-    const Section = ({ title, items }: { title: string, items: any[] }) => (
+    const Section = ({ title, items }: { title: string, items: ItemProps[] }) => (
         <div>
             <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4 px-2">
                 {title}

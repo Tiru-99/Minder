@@ -5,7 +5,7 @@ import DatePicker from "./DatePicker";
 import { format } from "date-fns";
 import TimePickerComponent from "./TimePicker";
 import { formatDateTime } from "@/utils/frontend/formatDateTime";
-import { addTask } from "@/hooks/taskCrud";
+import { useAddTask } from "@/hooks/taskCrud";
 import { Task } from "@/utils/frontend/types";
 
 import { toast } from "sonner";
@@ -34,7 +34,7 @@ export default function AddTaskModal({
             before1h: true,
         },
     };
-    const { mutate, isPending } = addTask();
+    const { mutate, isPending } = useAddTask();
     const [newTask, setNewTask] = useState<Task>(initialTask);
     const [selectedDate, setSelectedDate] = useState<Date | undefined>();
     const [time, setTime] = useState({

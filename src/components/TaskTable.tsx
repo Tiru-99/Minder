@@ -4,7 +4,7 @@ import EditTaskModal from "./EditTaskModal";
 import AddTaskModal from "./AddTaskModal";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, Plus, ChevronsLeftRightEllipsis, Loader2 } from "lucide-react";
-import { getTasks, deleteTask, moveToComplete } from "@/hooks/taskCrud";
+import { useGetTasks, useDeleteTask, useMoveToComplete } from "@/hooks/taskCrud";
 import { toast } from "sonner";
 import TaskTableSkeleton from "./TaskTableSkeleton";
 import { Task } from "@prisma/client";
@@ -39,9 +39,9 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
   };
 
 
-  const { data, isLoading } = getTasks();
-  const { mutate: deleteMutate, isPending: isDeleting } = deleteTask();
-  const { mutate: moveComplete, isPending: isMoving } = moveToComplete();
+  const { data, isLoading } = useGetTasks();
+  const { mutate: deleteMutate, isPending: isDeleting } = useDeleteTask();
+  const { mutate: moveComplete, isPending: isMoving } = useMoveToComplete();
   const [searchQuery, setSearchQuery] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);

@@ -34,7 +34,7 @@ interface SnoozeTask {
     }
 }
 
-export const getTasks = () => {
+export const useGetTasks = () => {
     return useQuery<ResponseTask[]>({
         queryKey: ["tasks"],
         queryFn: async () => {
@@ -44,7 +44,7 @@ export const getTasks = () => {
     })
 }
 
-export const addTask = () => {
+export const useAddTask = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (task: Task) => {
@@ -60,7 +60,7 @@ export const addTask = () => {
     })
 }
 
-export const snoozeTask = () => {
+export const useSnoozeTask = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (data: SnoozeTask) => {
@@ -76,7 +76,7 @@ export const snoozeTask = () => {
     })
 }
 
-export const deleteTask = () => {
+export const useDeleteTask = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
@@ -92,22 +92,8 @@ export const deleteTask = () => {
     });
 };
 
-export const updateTaskStatus = () => {
-    const queryClient = useQueryClient();
-    return useMutation({
-        mutationFn: async ({ id, status }: { id: string; status: string }) => {
-            const response = await axios.patch("/api/task", { id, status });
-            return response.data;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ["tasks"]
-            })
-        }
-    })
-}
 
-export const moveToComplete = () => {
+export const useMoveToComplete = () => {
     const queryClient = useQueryClient();
     return useMutation({
         mutationFn: async (taskId: string) => {

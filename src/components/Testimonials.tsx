@@ -6,23 +6,23 @@ import { Quote } from "lucide-react";
 const testimonials = [
     {
         quote: "Minder has completely transformed how I organize my day. The focus mode is a game-changer.",
-        author: "Sarah Jenkins",
-        role: "Product Designer",
-        initials: "SJ",
+        author: "Madar Wagh",
+        role: "ML Engineer",
+        initials: "MW",
         color: "bg-blue-500",
     },
     {
         quote: "The cleanest task manager I've ever used. It's simple, beautiful, and just works.",
-        author: "David Chen",
-        role: "Software Engineer",
-        initials: "DC",
+        author: "Pranay Nimje",
+        role: "Software Developer",
+        initials: "PN",
         color: "bg-purple-500",
     },
     {
-        quote: "I love the analytics feature. Seeing my productivity trends helps me stay motivated.",
-        author: "Emily Rodriguez",
-        role: "Freelance Writer",
-        initials: "ER",
+        quote: "I love the due reminder feature. It helps me stay on top of my tasks.",
+        author: "Nikhil Gupta",
+        role: "AI and Data Engineer",
+        initials: "NG",
         color: "bg-green-500",
     },
 ];

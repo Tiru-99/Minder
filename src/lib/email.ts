@@ -64,9 +64,7 @@ function getEmailContentByType(
                 .content { background-color: #f9fafb; padding: 30px; }
                 .task-card { background: white; padding: 25px; border-radius: 8px; 
                             border-left: 4px solid #667eea; margin: 20px 0; }
-                .button { display: inline-block; background-color: #667eea; color: white !important; 
-                         padding: 14px 28px; text-decoration: none; border-radius: 6px; 
-                         margin-top: 20px; font-weight: bold; }
+
                 .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
                 .icon { font-size: 48px; margin-bottom: 10px; }
               </style>
@@ -89,8 +87,7 @@ function getEmailContentByType(
                   </div>
                   
                   <p>💡 <strong>Tip:</strong> Start planning your approach now to avoid last-minute stress!</p>
-                  
-                  <a href="${taskUrl}" class="button">View Task Details</a>
+                
                   
                   <div class="footer">
                     <p>This is an early reminder. You'll receive more reminders as the deadline approaches.</p>
@@ -133,9 +130,7 @@ function getEmailContentByType(
                             border-left: 4px solid #f5576c; margin: 20px 0; }
                 .alert { background: #fef3c7; padding: 15px; border-radius: 6px; 
                         border-left: 4px solid #f59e0b; margin: 20px 0; }
-                .button { display: inline-block; background-color: #f5576c; color: white !important; 
-                         padding: 14px 28px; text-decoration: none; border-radius: 6px; 
-                         margin-top: 20px; font-weight: bold; }
+
                 .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
                 .icon { font-size: 48px; margin-bottom: 10px; }
               </style>
@@ -168,7 +163,7 @@ function getEmailContentByType(
                     <li>Block time on your calendar</li>
                   </ul>
                   
-                  <a href="${taskUrl}" class="button">View Task Details</a>
+
                   
                   <div class="footer">
                     <p>You'll receive additional reminders as the deadline gets closer.</p>
@@ -216,9 +211,7 @@ View task: ${taskUrl}
                             border-left: 4px solid #fa709a; margin: 20px 0; }
                 .urgent { background: #fee2e2; padding: 15px; border-radius: 6px; 
                          border-left: 4px solid #ef4444; margin: 20px 0; }
-                .button { display: inline-block; background-color: #fa709a; color: white !important; 
-                         padding: 14px 28px; text-decoration: none; border-radius: 6px; 
-                         margin-top: 20px; font-weight: bold; }
+
                 .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
                 .icon { font-size: 48px; margin-bottom: 10px; }
               </style>
@@ -251,7 +244,7 @@ View task: ${taskUrl}
                     <li>✓ Are there any blockers you need to address?</li>
                   </ul>
                   
-                  <a href="${taskUrl}" class="button">Open Task Now</a>
+
                   
                   <div class="footer">
                     <p>Don't wait until the last minute!</p>
@@ -300,9 +293,7 @@ View task: ${taskUrl}
                             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
                 .critical { background: #fee2e2; padding: 20px; border-radius: 6px; 
                            border: 2px solid #ef4444; margin: 20px 0; text-align: center; }
-                .button { display: inline-block; background-color: #ff6b6b; color: white !important; 
-                         padding: 16px 32px; text-decoration: none; border-radius: 6px; 
-                         margin-top: 20px; font-weight: bold; font-size: 16px; }
+
                 .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
                 .icon { font-size: 52px; margin-bottom: 10px; }
               </style>
@@ -336,9 +327,7 @@ View task: ${taskUrl}
                     <li>Focus on completion, not perfection</li>
                   </ul>
                   
-                  <center>
-                    <a href="${taskUrl}" class="button">🔥 COMPLETE TASK NOW</a>
-                  </center>
+
                   
                   <div class="footer">
                     <p>You'll receive a final reminder 1 hour before the deadline.</p>
@@ -388,10 +377,7 @@ Focus on:
                             box-shadow: 0 6px 12px rgba(235, 51, 73, 0.2); }
                 .emergency { background: #fef2f2; padding: 25px; border-radius: 6px; 
                             border: 3px solid #dc2626; margin: 20px 0; text-align: center; }
-                .button { display: inline-block; background-color: #dc2626; color: white !important; 
-                         padding: 18px 36px; text-decoration: none; border-radius: 6px; 
-                         margin-top: 20px; font-weight: bold; font-size: 18px;
-                         box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3); }
+
                 .footer { text-align: center; margin-top: 30px; color: #6b7280; font-size: 14px; }
                 .icon { font-size: 56px; margin-bottom: 10px; }
                 @keyframes pulse {
@@ -432,9 +418,7 @@ Focus on:
                     <li>✅ Aim for "done" rather than "perfect"</li>
                   </ul>
                   
-                  <center>
-                    <a href="${taskUrl}" class="button">⚡ START NOW - 3 HOURS LEFT!</a>
-                  </center>
+
                   
                   <div class="footer">
                     <p style="color: #dc2626; font-weight: bold;">You'll receive one final reminder in 2 hours.</p>
@@ -486,11 +470,7 @@ Emergency mode:
                             box-shadow: 0 8px 16px rgba(153, 27, 27, 0.3); }
                 .final-warning { background: #991b1b; color: white; padding: 30px; 
                                 border-radius: 6px; margin: 20px 0; text-align: center; }
-                .button { display: inline-block; background-color: #7f1d1d; color: white !important; 
-                         padding: 20px 40px; text-decoration: none; border-radius: 6px; 
-                         margin-top: 20px; font-weight: bold; font-size: 20px;
-                         box-shadow: 0 6px 12px rgba(127, 29, 29, 0.4);
-                         animation: button-pulse 1.5s infinite; }
+
                 .footer { text-align: center; margin-top: 30px; color: #991b1b; 
                          font-size: 15px; font-weight: bold; }
                 .icon { font-size: 64px; margin-bottom: 10px; }
@@ -547,11 +527,7 @@ Emergency mode:
                     </ul>
                   </div>
                   
-                  <center>
-                    <a href="${taskUrl}" class="button">
-                      🔥 COMPLETE NOW - FINAL HOUR! 🔥
-                    </a>
-                  </center>
+
                   
                   <div class="footer">
                     <p style="font-size: 17px;">⚠️ THIS IS YOUR LAST REMINDER BEFORE THE DEADLINE! ⚠️</p>

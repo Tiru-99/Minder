@@ -165,15 +165,15 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
 
   if (isLoading) {
     return (
-      <div className="p-4 md:px-18 md:pt-8">
+      <div className="p-4 md:px-4 lg:px-8 xl:px-12 md:pt-6">
         {/* Aesthetic Search Bar */}
-        <div className="mb-8 relative group max-w-2xl">
-          <h1 className="text-gray-400 text-5xl font-bold tracking-wide pb-4">TASKS</h1>
+        <div className="mb-4 md:mb-5 relative group max-w-2xl">
+          <h1 className="text-gray-400 text-2xl md:text-3xl font-bold tracking-wide pb-2">TASKS</h1>
           <div className="absolute -inset-px bg-linear-to-r from-transparent via-white/10 to-transparent rounded-xl opacity-50 blur-sm group-hover:opacity-75 transition duration-500" />
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between w-full items-center pb-4 gap-4 md:gap-0">
-          <div className="relative flex items-center gap-3 bg-black/50 backdrop-blur-xl border border-white/10 px-4 py-3.5 rounded-xl shadow-2xl w-full md:w-96 transition-all duration-300">
+        <div className="flex flex-col md:flex-row justify-between w-full items-center pb-3 md:pb-4 gap-3 md:gap-0">
+          <div className="relative flex items-center gap-3 bg-black/50 backdrop-blur-xl border border-white/10 px-4 py-2.5 md:py-3 rounded-xl shadow-2xl w-full md:w-96 transition-all duration-300">
             <Search className="w-5 h-5 text-neutral-500" />
             <input
               type="text"
@@ -184,7 +184,7 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
           </div>
           <button
             onClick={() => setIsAddModalOpen(true)}
-            className="w-full md:w-auto flex justify-center items-center gap-2 px-5 py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-neutral-200 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-95"
+            className="w-full md:w-auto flex justify-center items-center gap-2 px-4 py-2.5 bg-white text-black text-sm font-semibold rounded-xl hover:bg-neutral-200 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-95"
           >
             <Plus size={18} />
             Add Task
@@ -196,7 +196,7 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
   }
 
   return (
-    <div className="p-4 md:px-18 md:pt-8">
+    <div className="p-4 md:px-4 lg:px-8 xl:px-12 md:pt-6">
       {data && currentTaskIndex !== null && (
         <EditTaskModal
           task={data[currentTaskIndex]}
@@ -211,13 +211,13 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
       />
 
       {/* Aesthetic Search Bar */}
-      <div className="mb-8 relative group max-w-2xl">
-        <h1 className="text-gray-400 text-5xl font-bold tracking-wide pb-4">TASKS</h1>
+      <div className="mb-4 md:mb-5 relative group max-w-2xl">
+        <h1 className="text-gray-400 text-2xl md:text-3xl font-bold tracking-wide pb-2">TASKS</h1>
         <div className="absolute -inset-px bg-linear-to-r from-transparent via-white/10 to-transparent rounded-xl opacity-50 blur-sm group-hover:opacity-75 transition duration-500" />
       </div>
 
-      <div className="flex flex-col md:flex-row justify-between w-full items-center pb-4 gap-4 md:gap-0">
-        <div className="relative flex items-center gap-3 bg-black/50 backdrop-blur-xl border border-white/10 px-4 py-3.5 rounded-xl shadow-2xl w-full md:w-96 transition-all duration-300">
+      <div className="flex flex-col md:flex-row justify-between w-full items-center pb-3 md:pb-4 gap-3 md:gap-0">
+        <div className="relative flex items-center gap-3 bg-black/50 backdrop-blur-xl border border-white/10 px-4 py-2.5 md:py-3 rounded-xl shadow-2xl w-full md:w-96 transition-all duration-300">
           <Search className="w-5 h-5 text-neutral-500" />
           <input
             type="text"
@@ -232,7 +232,7 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
         </div>
         <button
           onClick={handleOpenAddModal}
-          className="w-full md:w-auto flex justify-center items-center gap-2 px-5 py-3 bg-white text-black text-sm font-semibold rounded-xl hover:bg-neutral-200 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-95"
+          className="w-full md:w-auto flex justify-center items-center gap-2 px-4 py-2.5 bg-white text-black text-sm font-semibold rounded-xl hover:bg-neutral-200 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:shadow-[0_0_25px_rgba(255,255,255,0.2)] hover:scale-[1.02] active:scale-95"
         >
           <Plus size={18} />
           Add Task
@@ -264,7 +264,7 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
                   {firstColumn.map(({ key, value }) => (
                     <th
                       key={key}
-                      className="px-6 py-3 text-sm font-medium text-neutral-400 text-left"
+                      className="px-4 py-2 text-sm font-medium text-neutral-400 text-left"
                     >
                       {value}
                     </th>
@@ -278,22 +278,22 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
                     key={index}
                     className="text-white border-t border-neutral-200/9 group"
                   >
-                    <td className="px-6 py-4 text-sm font-medium">
+                    <td className="px-4 py-2.5 md:py-3 text-sm font-medium">
                       {task.name}
                     </td>
 
-                    <td className="px-6 py-4 text-sm">
+                    <td className="px-4 py-2.5 md:py-3 text-sm">
                       {categoryBadge(
                         task.type,
                         categoryStyles[task.type] ?? ""
                       )}
                     </td>
 
-                    <td className="px-6 py-4 text-sm">
+                    <td className="px-4 py-2.5 md:py-3 text-sm">
                       {statusBadge(task.status, statusStyles[task.status] ?? "")}
                     </td>
 
-                    <td className="px-6 py-4 text-sm">
+                    <td className="px-4 py-2.5 md:py-3 text-sm">
                       <div className="flex gap-2 flex-wrap">
                         {Object.entries(task?.reminder ?? {})
                           .filter(([_, v]) => v === true)
@@ -308,17 +308,17 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
                       </div>
                     </td>
 
-                    <td className="px-6 py-4 text-sm">
+                    <td className="px-4 py-2.5 md:py-3 text-sm">
                       <span className="text-[12px] text-neutral-400 bg-white/10 rounded px-2 py-0.5">
                         {formatAfterDue(task.reminder.after_due_reminder)}
                       </span>
                     </td>
 
-                    <td className="px-6 py-4 text-sm font-medium">
+                    <td className="px-4 py-2.5 md:py-3 text-sm font-medium">
                       {formatReadableDate(task.deadline)}
                     </td>
 
-                    <td className="px-6 py-4 text-sm relative">
+                    <td className="px-4 py-2.5 md:py-3 text-sm relative">
                       <div
                         className="relative"
                         onMouseEnter={(e) => {
@@ -412,7 +412,7 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="flex justify-between items-center mt-8 px-2">
+              <div className="flex justify-between items-center mt-4 px-2">
                 <button
                   onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                   disabled={currentPage === 1}
@@ -578,18 +578,18 @@ export default function TaskTable({ activeFilter = "All Tasks" }: TaskTableProps
       </div>
 
       {/* Productivity Overview Section - Fills empty space */}
-      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-neutral-900/50 border border-neutral-800 p-6 rounded-xl">
+      <div className="mt-4 md:mt-0 lg:mt-12 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+        <div className="bg-neutral-900/50 border border-neutral-800 p-3 md:p-4 rounded-xl">
           <h3 className="text-neutral-400 text-sm font-medium mb-2">Total Tasks</h3>
           <p className="text-3xl font-bold text-white">{data?.length}</p>
         </div>
-        <div className="bg-neutral-900/50 border border-neutral-800 p-6 rounded-xl">
+        <div className="bg-neutral-900/50 border border-neutral-800 p-3 md:p-4 rounded-xl">
           <h3 className="text-neutral-400 text-sm font-medium mb-2">Completed</h3>
           <p className="text-3xl font-bold text-green-400">
             {data?.filter(t => t.status === 'COMPLETED').length}
           </p>
         </div>
-        <div className="bg-neutral-900/50 border border-neutral-800 p-6 rounded-xl">
+        <div className="bg-neutral-900/50 border border-neutral-800 p-4 md:p-5 rounded-xl">
           <h3 className="text-neutral-400 text-sm font-medium mb-2">Pending</h3>
           <p className="text-3xl font-bold text-yellow-400">
             {data?.filter(t => t.status !== 'COMPLETED').length}

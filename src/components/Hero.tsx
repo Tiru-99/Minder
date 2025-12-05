@@ -8,7 +8,7 @@ import HeroMockup from "@/components/HeroMockup";
 
 export default function Hero() {
     return (
-        <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-black text-white selection:bg-white/20 pt-24 md:pt-0">
+        <div className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-black text-white selection:bg-white/20 pt-20 sm:pt-24 md:pt-28 lg:pt-0">
             {/* Background Gradient Blob */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-[120px] pointer-events-none" />
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px] pointer-events-none opacity-50" />

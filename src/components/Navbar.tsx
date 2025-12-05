@@ -23,9 +23,9 @@ import { LucideProps } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface ItemType {
-    name : string , 
-    icon : ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>, 
-    active : boolean
+    name: string,
+    icon: ForwardRefExoticComponent<Omit<LucideProps, "ref"> & RefAttributes<SVGSVGElement>>,
+    active: boolean
 }
 
 export default function Navbar() {
@@ -81,7 +81,7 @@ export default function Navbar() {
             <div className="flex justify-between items-center bg-black px-4 md:px-8 py-4 backdrop-blur-sm border-b border-neutral-800/70 sticky top-0 z-50">
                 <div className="flex items-center gap-4">
                     <button
-                        className="lg:hidden text-white"
+                        className="md:hidden text-white"
                         onClick={() => setIsMobileMenuOpen(true)}
                     >
                         <Menu size={24} />
@@ -105,7 +105,7 @@ export default function Navbar() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 lg:hidden"
+                            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 md:hidden"
                             onClick={() => setIsMobileMenuOpen(false)}
                         />
                         <motion.div
@@ -113,7 +113,7 @@ export default function Navbar() {
                             animate={{ x: 0 }}
                             exit={{ x: "-100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                            className="fixed inset-y-0 left-0 w-3/4 max-w-sm bg-black border-r border-neutral-800 z-50 lg:hidden overflow-y-auto"
+                            className="fixed inset-y-0 left-0 w-3/4 max-w-sm bg-black border-r border-neutral-800 z-50 md:hidden overflow-y-auto"
                         >
                             <div className="p-6 flex flex-col h-full">
                                 <div className="flex justify-between items-center mb-8">

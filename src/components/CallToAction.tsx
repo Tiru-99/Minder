@@ -38,7 +38,7 @@ export default function CallToAction() {
                         transition={{ duration: 0.6, delay: 0.4 }}
                     >
                         <Link
-                            href="/auth/signup"
+                            href="/auth"
                             className="group inline-flex items-center gap-2 px-8 py-4 bg-white text-black rounded-full font-medium text-lg transition-all hover:bg-white/90 hover:scale-105 active:scale-95"
                         >
                             Get Started for Free

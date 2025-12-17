@@ -25,7 +25,7 @@ const instrumentSerif = Instrument_Serif({
 
 export const metadata: Metadata = {
   title: "Minder",
-  description: "Your modern day accountability partner",
+  description: "Your modern day accountability partner"
 };
 
 export default function RootLayout({

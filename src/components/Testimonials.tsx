@@ -6,7 +6,7 @@ import { Quote } from "lucide-react";
 const testimonials = [
     {
         quote: "Minder has completely transformed how I organize my day. The focus mode is a game-changer.",
-        author: "Madar Wagh",
+        author: "Mandar Wagh",
         role: "ML Engineer",
         initials: "MW",
         color: "bg-blue-500",

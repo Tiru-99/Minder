@@ -5,7 +5,7 @@ import { filterReminders } from "@/utils/backend/filterReminders";
 
 export async function scheduleEvent(data: SchedulePayloadType) {
     //function to remove unncessary reminders 
-    console.log("Scheduling event again"); 
+    console.log("Scheduling event again, and payload reminder is" , data.reminders); 
     const { validReminders } = filterReminders(data.taskDueDate, data.reminders);
     return await inngest.send({
         name: ScheduleReminder.NOTIFICATION_EVENT,

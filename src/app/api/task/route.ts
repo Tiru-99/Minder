@@ -1,6 +1,6 @@
 // route to insert and get the task and update the task 
 import { NextRequest, NextResponse } from "next/server";
-import prisma , { Prisma }from "@/lib/prisma";
+import prisma, { Prisma } from "@/lib/prisma";
 import { getUserId } from "@/utils/backend/getUserId";
 import { scheduleEvent, cancelEvent, updateEvent, cancelCron } from "@/inggest/events";
 
@@ -19,6 +19,7 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
+
 
   try {
 
@@ -65,11 +66,15 @@ export async function POST(request: NextRequest) {
       throw new Error("Task user data missing!");
     }
 
-    const reminderKeyArr = Object.keys(reminders);
+    //build a array of keys whose values is true 
+    const reminderKeys = Object.entries(incomingReminders)
+      .filter(([_, value]) => value === true)
+      .map(([key]) => key);
+
     const schedulePayload = {
       taskId: task.id,
       name: task.name,
-      reminders: reminderKeyArr,
+      reminders: [...reminderKeys , "before0h"],
       username: task.user.name,
       userEmail: task.user.email,
       taskDueDate: task.deadline,
@@ -165,7 +170,7 @@ export async function PATCH(req: NextRequest) {
     const userId = await getUserId();
     const body = await req.json();
     const { id, deadline, reminder: incomingReminders } = body;
-
+   
     if (!id) {
       return NextResponse.json(
         { success: false, error: "Task ID is required" },
@@ -182,7 +187,7 @@ export async function PATCH(req: NextRequest) {
 
     const { after_due_reminder } = incomingReminders;
 
-  
+
     const updatedTask = await prisma.task.update({
       where: { id, userId },
       data: {
@@ -220,12 +225,14 @@ export async function PATCH(req: NextRequest) {
       );
     }
 
+    const reminderArr = Object.entries(updatedTask.reminder)
+        .filter(([_, v]) => v === true)
+        .map(([k]) => k); 
+
     const payload = {
       taskId: updatedTask.id,
       name: updatedTask.name,
-      reminders: Object.entries(updatedTask.reminder)
-        .filter(([_, v]) => v === true)
-        .map(([k]) => k),
+      reminders: [...reminderArr , "before0h"] , 
       username: updatedTask.user.name,
       userEmail: updatedTask.user.email,
       taskDueDate: updatedTask.deadline,
@@ -240,8 +247,8 @@ export async function PATCH(req: NextRequest) {
       task: updatedTask,
     });
   } catch (err) {
-    if(err instanceof Prisma.PrismaClientKnownRequestError){
-      if(err.code === "P2025"){
+    if (err instanceof Prisma.PrismaClientKnownRequestError) {
+      if (err.code === "P2025") {
         return NextResponse.json(
           { success: false, error: "Task not found or unauthorized." },
           { status: 404 }

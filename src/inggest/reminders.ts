@@ -47,7 +47,7 @@ export const sendReminderStep = async (
     console.log(`Sending ${reminder} reminder for task ${taskId}`);
 
     // If this is the "0h" (due time) reminder and there's an after-due reminder
-    if (reminder === "0h" && after_due_reminder !== "none") {
+    if (reminder === "before0h") {
       console.log("Task is now due, updating status and setting up after-due reminder");
       await changeTaskStatus(taskId);
       await triggerCron({
@@ -69,7 +69,7 @@ export const sendReminderStep = async (
       taskDueDate: new Date(taskDueDate)
     });
 
-    console.log(`✅ Sent ${reminder} reminder for task ${taskId}`);
+    console.log(`Sent ${reminder} reminder for task ${taskId}`);
     return { sent: true, reminderType: reminder };
   });
 };

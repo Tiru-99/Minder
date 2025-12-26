@@ -55,7 +55,7 @@ export default function Navbar() {
             <h3 className="text-xs font-semibold text-neutral-500 uppercase tracking-wider mb-4 px-2">
                 {title}
             </h3>
-            <ul className="space-y-[2px]">
+            <ul className="space-y-0.5">
                 {items.map((item) => (
                     <li key={item.name}>
                         <button

@@ -26,6 +26,9 @@ export const scheduleReminder = inngest.createFunction(
     })
 
     await Promise.all(reminderPromises);
+
+    //for debug
+    // return await sendReminderStep("before0h", step, 0, taskId, userEmail, taskName, username, taskDueDate, after_due_reminder);
   },
 );
 
@@ -57,15 +60,18 @@ export const moveToOverdue = inngest.createFunction(
     //extract time 
     const timeInterval = after_due_reminder.split("_").pop();
     while (true) {
-      await sendCronEmail(
-        taskId,
-        after_due_reminder,
-        username,
-        userEmail,
-        taskName
-      );
 
-      step.sleep(`${taskId}-sleep`, timeInterval);
+      await step.sleep(`${taskId}-sleep`, timeInterval);
+
+      await step.run(`${taskId}-run`, async() => {
+        await sendCronEmail(
+          taskId,
+          after_due_reminder,
+          username,
+          userEmail,
+          taskName
+        );
+      })
     }
   }
 )
@@ -74,15 +80,15 @@ export const cleanupCron = inngest.createFunction(
   {
     id: ScheduleReminder.CLEANUP_CRON_EVENT,
   },
-  { cron : "TZ=Asia/Kolkata 0 */12 * * *"},
+  { cron: "TZ=Asia/Kolkata 0 */12 * * *" },
   async ({ step }) => {
-      //cleanup all the PENDING_INCOMING STATUS
-      await step.run("cleanup-pending-incoming", async () => {
-        await prisma.task.deleteMany({
-          where: {
-            status: "PENDING_INCOMING"
-          }
-        })
+    //cleanup all the PENDING_INCOMING STATUS
+    await step.run("cleanup-pending-incoming", async () => {
+      await prisma.task.deleteMany({
+        where: {
+          status: "PENDING_INCOMING"
+        }
       })
+    })
   }
 )

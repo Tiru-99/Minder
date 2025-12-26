@@ -3,6 +3,7 @@ import { changeTaskStatus } from "@/utils/backend/changeTaskStatus";
 import { GetStepTools } from "inngest";
 import { inngest } from "./client";
 import { triggerCron } from "./events";
+import { functionWrapper } from "@/utils/backend/retry";
 
 //inngest step type 
 type StepTools = GetStepTools<typeof inngest>;
@@ -17,11 +18,11 @@ export const sendReminderStep = async (
   taskDueDate: Date,
   after_due_reminder: string
 ) => {
-  console.log("Coming into execute step");
 
+  console.debug("The reminder is ", reminder);
   // Calculate when to send this reminder
   const waitTime = getWaitTime(reminder);
-  
+
   // Convert "3h" → 3 hours → milliseconds
   const hours = parseInt(waitTime.replace("h", ""), 10);
   const waitMs = hours * 60 * 60 * 1000;
@@ -49,14 +50,17 @@ export const sendReminderStep = async (
     // If this is the "0h" (due time) reminder and there's an after-due reminder
     if (reminder === "before0h") {
       console.log("Task is now due, updating status and setting up after-due reminder");
-      await changeTaskStatus(taskId);
-      await triggerCron({
-        taskId,
-        after_due_reminder,
-        username,
-        userEmail,
-        taskName
-      });
+      //function wrapper to retry if something failed
+      await functionWrapper(changeTaskStatus, [taskId]);
+      await functionWrapper(triggerCron, [
+        {
+          taskId,
+          after_due_reminder,
+          username,
+          userEmail,
+          taskName
+        }
+      ]);
     }
 
     // Send the reminder email
@@ -95,3 +99,4 @@ const getWaitTime = (reminder: string): string => {
       return "0h";
   }
 };
+

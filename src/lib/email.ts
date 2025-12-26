@@ -46,7 +46,7 @@ function getEmailContentByType(
 ): { subject: string; html: string; text: string } {
   const greeting = userName ? `Hi ${userName}` : 'Hello';
   const formattedDate = formatDate(taskDueDate);
-  const taskUrl = `${process.env.APP_URL}/tasks/${taskId}`;
+  const taskUrl = `${process.env.APP_URL}/home`;
 
   switch (reminderType) {
     case "before48h":
@@ -566,15 +566,77 @@ Make every minute count!
 
     default:
       return {
-        subject: `Reminder: "${taskName}"`,
+        subject: `⏰ Task Overdue: "${taskName}"`,
         html: `
-          <p>${greeting},</p>
-          <p>This is a reminder about your task: <strong>${taskName}</strong></p>
-          <p><strong>Due:</strong> ${formattedDate}</p>
-          <p><a href="${taskUrl}">View Task</a></p>
-        `,
-        text: `${greeting},\n\nReminder: ${taskName}\nDue: ${formattedDate}\n\nView: ${taskUrl}`
+    <p>${greeting},</p>
+
+    <p>
+      This is a reminder regarding your task
+      <strong>"${taskName}"</strong>.
+    </p>
+
+    <p>
+      <strong>Status update:</strong> This task has now been moved to the
+      <strong>Overdue</strong> section.
+    </p>
+
+    <p>
+      If you selected overdue reminders (for example, reminders in hours),
+      you will continue to receive follow-up emails until the task is marked
+      as completed.
+    </p>
+
+    <p>
+      <strong>Due:</strong> ${formattedDate}
+    </p>
+
+    <p>
+      👉 <a href="${taskUrl}">View Task</a>
+    </p>
+
+    <hr />
+
+    <p>
+      If you’ve already completed this task — great job 🎉  
+      Please head over to
+      <a href="https://minderapp.online/home">minderapp.online</a>
+      and update the task status to <strong>Completed</strong>
+      to stop receiving these reminders.
+    </p>
+
+    <p>
+      And if you haven’t completed it yet — this is your nudge 🙂
+      Take a few minutes, get it done, and clear it off your list.
+    </p>
+
+    <p>
+      You’ve got this 💪<br />
+      — Team Minder
+    </p>
+  `,
+        text: `${greeting},
+
+This is a reminder regarding your task "${taskName}".
+
+Status update:
+This task has been moved to the Overdue section.
+
+If you selected overdue reminders (such as reminders in hours), you will continue
+to receive follow-up emails until the task is marked as completed.
+
+Due: ${formattedDate}
+
+View task: ${taskUrl}
+
+If you’ve already completed this task, great job!
+Please visit https://minderapp.online/home and mark the task as Completed
+to stop receiving these reminders.
+
+If not — this is your reminder to finish it and move on 🙂
+
+— Team Minder`
       };
+
   }
 }
 
